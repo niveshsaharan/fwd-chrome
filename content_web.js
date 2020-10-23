@@ -130,6 +130,8 @@
                 return;
             }
 
+            $('#cheapest-service-icon').remove();
+
             getShippingRatesForServices(requestData, data);
         }
 
@@ -147,6 +149,8 @@
             {
                 return;
             }
+
+            $('#cheapest-service-icon').remove();
 
             if(! length || ! width || ! height || ! serviceMappings[length + 'x' + width + 'x' + height]){
                 logger('No need to check the rates.')
@@ -168,6 +172,8 @@
                 logger('No need to check the rates.')
                 return;
             }
+
+            $('#cheapest-service-icon').remove();
 
             $('.modal.order-detail .get-quote').click();
         }
@@ -196,6 +202,21 @@
                 logger('Setting cheapest package as selected. It will fire another AJAX Request.')
 
                 $container.find('[name="RequestedPackageTypeID"]').val(service.packageId).trigger('change');
+            }
+            else
+            {
+                setTimeout(function(){
+                    logger('Cheapest service is set as selected. You can create label now')
+
+                    $('#cheapest-service-icon').remove();
+                    const checkmarkIcon = `<a id="cheapest-service-icon" style="
+    vertical-align: bottom;
+    margin-left: 5px;
+"> <i class="icon-check text-success" style="font-size: 20px;"></i></a>`
+
+                    $container.find('.get-quote').after(checkmarkIcon)
+                }, 1000);
+
             }
         }, 2000);
     }
@@ -326,6 +347,7 @@
             const $container = $('.modal.order-detail');
 
             $('#cheapest-service').remove();
+            $('#cheapest-service-icon').remove();
 
             $container.find('.shipping-rate').after(`
 <fieldset class="rating" id="cheapest-service" sty>
