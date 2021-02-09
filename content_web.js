@@ -232,7 +232,8 @@
 
         if(response)
         {
-            caches[key] = response;
+            let keyFromResponse = response.orders[0].ServiceID +'_' + response.orders[0].RequestedPackageTypeID + '_' + response.orders[0].ProviderID + '_' + response.orders[0].CarrierID + '_' + response.orders[0].Length + '_' + response.orders[0].Width + '_' + response.orders[0].Height;
+            caches[keyFromResponse] = response;
         }
 
         return caches[key];
