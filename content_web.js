@@ -96,6 +96,11 @@
         }
     }
 
+    function clearCheapestServiceMessaging(){
+        $('#cheapest-service').remove();
+        $('#cheapest-service-icon').remove();
+    }
+
     /**
      * Capture AajxSuccess
      */
@@ -130,7 +135,7 @@
                 return;
             }
 
-            $('#cheapest-service-icon').remove();
+            clearCheapestServiceMessaging();
 
             getShippingRatesForServices(requestData, data);
         }
@@ -150,7 +155,7 @@
                 return;
             }
 
-            $('#cheapest-service-icon').remove();
+            clearCheapestServiceMessaging()
 
             if(! length || ! width || ! height || ! serviceMappings[length + 'x' + width + 'x' + height]){
                 logger('No need to check the rates.')
@@ -170,10 +175,11 @@
 
             if(! length || ! width || ! height || ! serviceMappings[length + 'x' + width + 'x' + height]){
                 logger('No need to check the rates.')
+                clearCheapestServiceMessaging()
                 return;
             }
 
-            $('#cheapest-service-icon').remove();
+            clearCheapestServiceMessaging()
 
             $('.modal.order-detail .get-quote').click();
         }
@@ -206,7 +212,7 @@
             else
             {
                 setTimeout(function(){
-                    logger('Cheapest service is set as selected. You can create label now')
+                    logger('Cheapest service (' + service.service + ' - ' + service.package + '@' + service.price + ') is set as selected. You can create label now', service)
 
                     $('#cheapest-service-icon').remove();
                     const checkmarkIcon = `<a id="cheapest-service-icon" style="
@@ -284,8 +290,6 @@
 
                     if(! res)
                     {
-
-
                         res = await fetch("https://ss4.shipstation.com/api/orders/updaterates?nivesh", {
                             "headers": {
                                 "accept": "application/json",
@@ -332,8 +336,13 @@
                     {
                         service.price = response.orders[0].ShippingCost + response.orders[0].ConfirmationCost + response.orders[0].InsuranceCost + response.orders[0].OtherCost;
                     }
+                    else{
+                        logger("Rate Error for " + service.service, response.orders[0].RateError)
+                    }
+
+                    logger("Response was for " + service.service + ' - ' + service.package + ' @ ' + service.price, service);
                 }
-            })
+            });
         }
 
         return services;
@@ -341,14 +350,21 @@
 
     function handleServiceRates(services, callback){
 
-        const service = services.filter(service => service.price > 0).reduce((prev, curr) => prev.price < curr.price ? prev : curr);
+        const logs = ['Find cheapest rate in services'];
+
+        services.forEach(service => {
+            logs.push(service.service + ' - ' + service.package + ' - ' + service.price, service);
+        });
+
+        logger(...logs);
+
+        const service = services.filter(service => service.price > 0).reduce((prev, curr) => prev.price < curr.price ? prev : curr, 0);
 
         if(service && service.price > 0)
         {
             const $container = $('.modal.order-detail');
 
-            $('#cheapest-service').remove();
-            $('#cheapest-service-icon').remove();
+            clearCheapestServiceMessaging();
 
             $container.find('.shipping-rate').after(`
 <fieldset class="rating" id="cheapest-service" sty>
