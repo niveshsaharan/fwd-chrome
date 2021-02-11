@@ -193,6 +193,11 @@
      */
     function setCheapestServiceAsSelected(data, service){
 
+        if(!(service && service.order && currentlyViewingSameOrder(service.order.OrderNumber)))
+        {
+            return false;
+        }
+
         const $container = $('.modal.order-detail');
 
         if(parseInt($container.find('[name="ServiceID"]').val(), 10) !== parseInt(service.serviceId, 10))
@@ -234,11 +239,11 @@
      * @returns {*}
      */
     function cache(request, response){
-        const key = request.orderViews[0].ServiceID +'_' + request.orderViews[0].RequestedPackageTypeID + '_' + request.orderViews[0].ProviderID + '_' + request.orderViews[0].CarrierID + '_' + request.orderViews[0].Length + '_' + request.orderViews[0].Width + '_' + request.orderViews[0].Height;
+        const key = request.orderViews[0].OrderID + "_" + request.orderViews[0].ServiceID +'_' + request.orderViews[0].RequestedPackageTypeID + '_' + request.orderViews[0].ProviderID + '_' + request.orderViews[0].CarrierID + '_' + request.orderViews[0].Length + '_' + request.orderViews[0].Width + '_' + request.orderViews[0].Height;
 
         if(response)
         {
-            let keyFromResponse = response.orders[0].ServiceID +'_' + response.orders[0].RequestedPackageTypeID + '_' + response.orders[0].ProviderID + '_' + response.orders[0].CarrierID + '_' + response.orders[0].Length + '_' + response.orders[0].Width + '_' + response.orders[0].Height;
+            let keyFromResponse = response.orders[0].OrderID +'_' + response.orders[0].ServiceID +'_' + response.orders[0].RequestedPackageTypeID + '_' + response.orders[0].ProviderID + '_' + response.orders[0].CarrierID + '_' + response.orders[0].Length + '_' + response.orders[0].Width + '_' + response.orders[0].Height;
             caches[keyFromResponse] = response;
         }
 
@@ -319,16 +324,30 @@
         }
     }
 
+    function currentlyViewingSameOrder(orderNumber){
+        const text = $('.modal.order-detail .order-num').text()
+        const same = text && orderNumber && text.includes(orderNumber);
+
+        if(! same)
+        {
+            console.error("You are currently viewing " + text + " but the response was for Order: " + orderNumber);
+        }
+
+        return same;
+    }
+
     function setServiceRateFromResponse(response, services){
 
         if(response && response.final && response.success && response.orders && response.orders.length)
         {
             services.forEach(service => {
-                if( parseInt(service.length, 10) === parseInt(response.orders[0].Length, 10)
+                if( currentlyViewingSameOrder(response.orders[0].OrderNumber)
+                    && parseInt(service.length, 10) === parseInt(response.orders[0].Length, 10)
                     && parseInt(service.width, 10) === parseInt(response.orders[0].Width, 10)
                     && parseInt(service.height, 10) === parseInt(response.orders[0].Height, 10)
                     && parseInt(response.orders[0].ServiceID, 10) === parseInt(service.serviceId, 10)
-                    && parseInt(response.orders[0].RequestedPackageTypeID, 10) === parseInt(service.packageId, 10))
+                    && parseInt(response.orders[0].RequestedPackageTypeID, 10) === parseInt(service.packageId, 10)
+                )
                 {
                     service.order = response.orders[0];
 
@@ -360,7 +379,7 @@
 
         const service = services.filter(service => service.price > 0).reduce((prev, curr) => prev.price < curr.price ? prev : curr, 0);
 
-        if(service && service.price > 0)
+        if(service && service.price > 0 && service.order && currentlyViewingSameOrder(service.order.OrderNumber))
         {
             const $container = $('.modal.order-detail');
 
