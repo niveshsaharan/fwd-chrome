@@ -9,6 +9,12 @@
         'commercial':   function(data){
           return data.ResidentialIndicator === 'C';
       },
+        'not_residential':   function(data){
+          return data.ResidentialIndicator !== 'R';
+      },
+        'not_commercial':   function(data){
+          return data.ResidentialIndicator !== 'C';
+      },
     };
 
     const serviceMappings = {
@@ -73,7 +79,7 @@
                 providerId: 4,
                 carrierId: 4,
                 conditions: [
-                    'commercial'
+                    'not_residential'
                 ]
             }
         ]
