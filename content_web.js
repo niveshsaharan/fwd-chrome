@@ -2,6 +2,15 @@
 
     const $ = Backbone.$;
 
+    const conditions = {
+      'residential':   function(data){
+          return data.ResidentialIndicator === 'R';
+      },
+        'commercial':   function(data){
+          return data.ResidentialIndicator === 'C';
+      },
+    };
+
     const serviceMappings = {
         '12x15x1' : [
             {
@@ -40,15 +49,32 @@
                 carrierId: 1,
             },
             {
-                service: 'UPS 2nd Day Air®',
-                serviceId: 28,
+                service: 'FedEx Home Delivery®',
+                serviceId: 51,
                 package: 'Package',
                 packageId: 3,
                 length: 14,
                 width: 12,
                 height: 3,
-                providerId: 3,
-                carrierId: 3,
+                providerId: 4,
+                carrierId: 4,
+                conditions: [
+                    'residential'
+                ]
+            },
+            {
+                service: 'FedEx Ground®',
+                serviceId: 50,
+                package: 'Package',
+                packageId: 3,
+                length: 14,
+                width: 12,
+                height: 3,
+                providerId: 4,
+                carrierId: 4,
+                conditions: [
+                    'commercial'
+                ]
             }
         ]
     }
@@ -268,7 +294,14 @@
 
         if(typeof serviceMappingWithPrices[size] === "object") {
 
-            const services = serviceMappingWithPrices[size];
+            const services = serviceMappingWithPrices[size].filter(service => {
+                if(service.conditions && service.conditions.length)
+                {
+                    return service.conditions.every(condition => conditions[condition](data.orderViews[0]));
+                }
+
+                return true;
+            });
 
             for(const service of services)
             {
