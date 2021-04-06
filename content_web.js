@@ -1,5 +1,11 @@
 (function(){
 
+    if(typeof Backbone === "undefined")
+    {
+        console.error("Backbone not found.");
+        return;
+    }
+
     const $ = Backbone.$;
 
     const conditions = {
@@ -82,8 +88,65 @@
                     'not_residential'
                 ]
             }
-        ]
-    }
+        ],
+    };
+
+    // Basically when dimensions are 20x12x[random variable]
+    // I want to rate check between USPS priority mail package and FedEx (ground if commercial, home delivery if residential)
+    // And then assign lowest rate
+    // Basically same like when dimensions are 14x12x3
+    [
+        3,
+        4,
+        6,
+        8,
+        10,
+        12,
+        16,
+        20,
+    ].forEach(height => {
+        serviceMappings['20x12x' + height] = [
+            {
+                service: 'USPS Priority Mail',
+                serviceId: 13,
+                package: 'Package',
+                packageId: 3,
+                length: 20,
+                width: 12,
+                height: height,
+                providerId: 2,
+                carrierId: 1,
+            },
+            {
+                service: 'FedEx Home Delivery®',
+                serviceId: 51,
+                package: 'Package',
+                packageId: 3,
+                length: 20,
+                width: 12,
+                height: height,
+                providerId: 4,
+                carrierId: 4,
+                conditions: [
+                    'residential'
+                ]
+            },
+            {
+                service: 'FedEx Ground®',
+                serviceId: 50,
+                package: 'Package',
+                packageId: 3,
+                length: 20,
+                width: 12,
+                height: height,
+                providerId: 4,
+                carrierId: 4,
+                conditions: [
+                    'not_residential'
+                ]
+            }
+        ];
+    });
 
     const caches = {};
 
