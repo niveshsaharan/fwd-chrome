@@ -89,6 +89,47 @@
                 ]
             }
         ],
+        '15x12x3' : [
+            {
+                service: 'USPS Priority Mail',
+                serviceId: 13,
+                package: 'Package',
+                packageId: 3,
+                length: 15,
+                width: 12,
+                height: 3,
+                providerId: 2,
+                carrierId: 1,
+            },
+            {
+                service: 'FedEx Home Delivery®',
+                serviceId: 51,
+                package: 'Package',
+                packageId: 3,
+                length: 15,
+                width: 12,
+                height: 3,
+                providerId: 4,
+                carrierId: 4,
+                conditions: [
+                    'residential'
+                ]
+            },
+            {
+                service: 'FedEx Ground®',
+                serviceId: 50,
+                package: 'Package',
+                packageId: 3,
+                length: 15,
+                width: 12,
+                height: 3,
+                providerId: 4,
+                carrierId: 4,
+                conditions: [
+                    'not_residential'
+                ]
+            }
+        ],
     };
 
     // Basically when dimensions are 20x12x[random variable]
