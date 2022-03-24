@@ -19,7 +19,26 @@
         not_commercial: function (data) {
             return data.ResidentialIndicator !== "C";
         },
+        when_requested_shipping_service_is_not_60: function (data) {
+            return data.RequestedShippingServiceID !== 60;
+        },
+        when_requested_shipping_service_is_in: function (data, values) {
+            return values.includes(data.RequestedShippingService);
+        }
     };
+
+    const styles = `<style>
+    .ss-wip .btn-group.ship-btn-group a.btn-success, .ss-wip .quick-ship-on .btn-group.ship-btn-group a.btn-success{
+      background-color: #c0c0c0 !important;
+      cursor: not-allowed !important;
+      border-color: #909090 !important;
+    }
+    .ss-wip .btn-group.ship-btn-group a.quickship-toggle, .ss-wip .quick-ship-on .btn-group.ship-btn-group a.quickship-toggle{
+      border-left: 1px solid #909090!important;
+    }
+    </style>`;
+
+    $('head').append(styles);
 
     const serviceMappings = {
         "2x2x2": [
@@ -33,6 +52,7 @@
                 height: 2,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
             {
                 service: "FedEx Ground®",
@@ -44,7 +64,7 @@
                 height: 2,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["not_residential"],
+                conditions: ["not_residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Standard Overnight®",
@@ -56,6 +76,7 @@
                 height: 2,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
             {
                 service: "FedEx Home Delivery®",
@@ -67,7 +88,7 @@
                 height: 2,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["residential"],
+                conditions: ["residential", 'when_requested_shipping_service_is_not_60'],
             },
         ],
         "9x12x1": [
@@ -87,7 +108,8 @@
                     length: 12,
                     width: 9,
                     height: 0,
-                }
+                },
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
             {
                 service: "FedEx Home Delivery®",
@@ -99,7 +121,7 @@
                 height: 1,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["residential"],
+                conditions: ["residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx 2Day®",
@@ -111,6 +133,7 @@
                 height: 1,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
             {
                 service: "FedEx Ground®",
@@ -122,7 +145,7 @@
                 height: 1,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["not_residential"],
+                conditions: ["not_residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Standard Overnight®",
@@ -134,6 +157,7 @@
                 height: 1,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
         ],
         "12x15x1": [
@@ -153,7 +177,8 @@
                     length: 15,
                     width: 12,
                     height: 0,
-                }
+                },
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
             {
                 service: "FedEx Home Delivery®",
@@ -165,7 +190,7 @@
                 height: 1,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["residential"],
+                conditions: ["residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx 2Day®",
@@ -177,6 +202,7 @@
                 height: 1,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
             {
                 service: "FedEx Ground®",
@@ -188,7 +214,7 @@
                 height: 1,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["not_residential"],
+                conditions: ["not_residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Standard Overnight®",
@@ -200,6 +226,7 @@
                 height: 1,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
         ],
         "14x12x3": [
@@ -219,7 +246,8 @@
                     length: 17,
                     width: 14,
                     height: 0,
-                }
+                },
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
             {
                 service: "FedEx Home Delivery®",
@@ -231,7 +259,7 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["residential"],
+                conditions: ["residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Ground®",
@@ -243,7 +271,7 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["not_residential"],
+                conditions: ["not_residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Standard Overnight®",
@@ -255,6 +283,7 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx 2Day®",
@@ -266,6 +295,7 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
         ],
         "15x12x3": [
@@ -285,7 +315,8 @@
                     length: 19,
                     width: 15,
                     height: 0,
-                }
+                },
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
             {
                 service: "FedEx Home Delivery®",
@@ -297,7 +328,7 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["residential"],
+                conditions: ["residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Ground®",
@@ -309,7 +340,7 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["not_residential"],
+                conditions: ["not_residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Standard Overnight®",
@@ -321,6 +352,7 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
             {
                 service: "FedEx 2Day®",
@@ -332,6 +364,7 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
         ],
     };
@@ -352,6 +385,7 @@
                 height: height,
                 providerId: 2,
                 carrierId: 1,
+                conditions: ['when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Home Delivery®",
@@ -363,7 +397,7 @@
                 height: height,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["residential"],
+                conditions: ["residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Ground®",
@@ -375,7 +409,7 @@
                 height: height,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ["not_residential"],
+                conditions: ["not_residential", 'when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Standard Overnight®",
@@ -387,6 +421,7 @@
                 height: height,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx 2Day®",
@@ -398,9 +433,58 @@
                 height: height,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60'],
             },
         ];
     });
+
+    serviceMappings['***'] = [
+        {
+            service: "FedEx International Priority",
+            serviceId: 60,
+            package: "Package",
+            packageId: 3,
+            length: null,
+            width: null,
+            height: null,
+            providerId: 4,
+            carrierId: 4,
+            conditions: [{
+                'function': 'when_requested_shipping_service_is_in',
+                args: [['FedEx International Priority']]
+            }],
+        },
+        {
+            service: "FedEx International Connect Plus",
+            serviceId: 4011,
+            package: "Package",
+            packageId: 3,
+            length: null,
+            width: null,
+            height: null,
+            providerId: 4,
+            carrierId: 4,
+            conditions: [{
+                'function': 'when_requested_shipping_service_is_in',
+                args: [['FedEx International Economy', 'FedEx International Standard', 'FedEx International Connect Plus']]
+            }],
+        },
+        {
+            service: "FedEx International Economy",
+            serviceId: 59,
+            package: "Package",
+            packageId: 3,
+            length: null,
+            width: null,
+            height: null,
+            providerId: 4,
+            carrierId: 4,
+            conditions: [{
+                'function': 'when_requested_shipping_service_is_in',
+                args: [['FedEx International Economy', 'FedEx International Standard', 'FedEx International Connect Plus']]
+            }],
+        }
+    ];
 
     Object.keys(serviceMappings).forEach(size => {
         if (serviceMappings[size]) {
@@ -430,7 +514,6 @@
             $(".input-group.spinner") != "undefined" &&
             $(".input-group.spinner").find('[type="number"]').length != 0
         ) {
-            logger("Adding input handler");
             $(".input-group.spinner").find('[type="number"]').unbind("change");
             $(".input-group.spinner")
                 .find('[type="number"]')
@@ -475,6 +558,7 @@
             // adding processing feature to UI
             $(".col-sm-9.form-control-static").hide();
             $(".rating").find(".processing-icon").remove();
+            setWip();
             $(".form-group.shipping-rate").append(
                 "<div class='processing-icon' style='height: 30px; width: 30px; margin-left: 100px; margin-bottom: 10px;'><img  style= 'max-width: 100%; max-height: 100%; margin: auto; display: block;' src='https://media.giphy.com/media/sSgvbe1m3n93G/giphy.gif'></div>"
             );
@@ -509,6 +593,17 @@
     function clearCheapestServiceMessaging() {
         $("#cheapest-service").remove();
         $("#cheapest-service-icon").remove();
+        setWip();
+    }
+
+    function setWip() {
+        console.log("Work in progress")
+        $(".modal.order-detail").addClass('ss-wip');
+    }
+
+    function removeWip() {
+        console.log("Done Work in progress")
+        $(".modal.order-detail").removeClass('ss-wip');
     }
 
     /**
@@ -574,6 +669,8 @@
                                 "<a id='cheapest-service-icon' style='vertical-align: bottom;margin-left: 5px;'> <i class='icon-check text-success' style='font-size: 20px;'></i></a>"
                             );
                     }
+
+                    removeWip();
                     return;
                 }
                 if (
@@ -595,6 +692,7 @@
                                 "<a id='cheapest-service-icon' style='vertical-align: bottom;margin-left: 5px;'> <i class='icon-check text-success' style='font-size: 20px;'></i></a>"
                             );
                     }
+                    removeWip();
                     return;
                 }
             }
@@ -644,16 +742,17 @@
                 !length ||
                 !width ||
                 !height ||
-                !serviceMappings[length + "x" + width + "x" + height]
+                (!serviceMappings[length + "x" + width + "x" + height] && !serviceMappings['***'])
             ) {
                 logger("No need to check the rates.");
-                if ($(".modal-body") != "undefined") {
+                /*if ($(".modal-body") != "undefined") {
                     $(".modal-body")
                         .find(".col-sm-9.form-control-static")
                         .append(
                             "<a id='cheapest-service-icon' style='vertical-align: bottom;margin-left: 5px;'> <i class='icon-check text-success' style='font-size: 20px;'></i></a>"
                         );
-                }
+                }*/
+                // removeWip();
                 return;
             }
 
@@ -670,17 +769,18 @@
                 !length ||
                 !width ||
                 !height ||
-                !serviceMappings[length + "x" + width + "x" + height]
+                (!serviceMappings[length + "x" + width + "x" + height] && !serviceMappings['***'])
             ) {
                 logger("No need to check the rates.");
                 clearCheapestServiceMessaging();
-                if ($(".modal-body") != "undefined") {
-                    $(".modal-body")
+                /*if ($(".modal-body") != "undefined") {
+                    /!*$(".modal-body")
                         .find(".col-sm-9.form-control-static")
                         .append(
                             "<a id='cheapest-service-icon' style='vertical-align: bottom;margin-left: 5px;'> <i class='icon-check text-success' style='font-size: 20px;'></i></a>"
-                        );
-                }
+                        );*!/
+                }*/
+                //removeWip();
                 return;
             }
 
@@ -723,6 +823,7 @@
         }
 
         const $container = $(".modal.order-detail");
+        setWip();
 
         if (
             parseInt($container.find('[name="ServiceID"]').val(), 10) !==
@@ -798,6 +899,7 @@
                     $container.find(".get-quote").after(checkmarkIcon);
                     $(".rating").find(".processing-icon").remove();
                     $(".col-sm-9.form-control-static").show();
+                    removeWip();
                 }, 1000);
             }
         }, 2000);
@@ -866,13 +968,10 @@
         const height = data.orderViews[0].Height;
 
         const size = length + "x" + width + "x" + height;
-        logger(data.orderViews[0], data);
-        logger("size" + size);
         var exceptionDimentions = ["2x2x2"];
         var exceptionServiceReq = ["2-Day Delivery", "Next Day Delivery"];
 
-        if (typeof serviceMappingWithPrices[size] === "object") {
-            logger("service map object");
+        if (typeof serviceMappingWithPrices[size] === "object" || typeof serviceMappingWithPrices['***'] === "object") {
             if (
                 exceptionDimentions.includes(size) &&
                 !exceptionServiceReq.includes(
@@ -887,18 +986,34 @@
                             "<a id='cheapest-service-icon' style='vertical-align: bottom;margin-left: 5px;'> <i class='icon-check text-success' style='font-size: 20px;'></i></a>"
                         );
                 }
+                removeWip();
                 return;
             }
-            logger("Tool is getting triggered");
-            const services = serviceMappingWithPrices[size].filter((service) => {
+
+            const serviceMappingWithPrices1 = [...(serviceMappingWithPrices[size] || []), ...serviceMappingWithPrices['***']];
+            const services = serviceMappingWithPrices1.filter((service) => {
                 if (service.conditions && service.conditions.length) {
-                    return service.conditions.every((condition) =>
-                        conditions[condition](data.orderViews[0])
+                    return service.conditions.every((condition) => {
+                            if (typeof condition === "object" && condition.function && typeof condition.function === "string") {
+                                return conditions[condition.function](data.orderViews[0], ...condition.args)
+                            }
+
+                            return conditions[condition](data.orderViews[0])
+                        }
                     );
                 }
 
                 return true;
             });
+
+            if (!services.length) {
+                logger("Nothing to check");
+                clearCheapestServiceMessaging();
+                removeWip();
+                return;
+            }
+
+            logger("Tool is getting triggered");
 
             for (const service of services) {
                 logger("within for");
@@ -939,7 +1054,7 @@
 
                     if (!res) {
                         res = await fetch(
-                            "https://ss4.shipstation.com/api/orders/updaterates?nivesh",
+                            "https://ss4.shipstation.com/api/orders/updaterates",
                             {
                                 headers: {
                                     accept: "application/json",
@@ -993,6 +1108,7 @@
                         "<a id='cheapest-service-icon' style='vertical-align: bottom;margin-left: 5px;'> <i class='icon-check text-success' style='font-size: 20px;'></i></a>"
                     );
             }
+            removeWip();
         }
     }
 
@@ -1024,12 +1140,12 @@
                 var deliveryDays = null;
                 if (
                     currentlyViewingSameOrder(response.orders[0].OrderNumber) &&
-                    parseInt(service.length, 10) ===
-                    parseInt(response.orders[0].Length, 10) &&
-                    parseInt(service.width, 10) ===
-                    parseInt(response.orders[0].Width, 10) &&
-                    parseInt(service.height, 10) ===
-                    parseInt(response.orders[0].Height, 10) &&
+                    (parseInt(service.length, 10) ===
+                        parseInt(response.orders[0].Length, 10) || service.length === null) &&
+                    (parseInt(service.width, 10) ===
+                        parseInt(response.orders[0].Width, 10) || service.width === null) &&
+                    (parseInt(service.height, 10) ===
+                        parseInt(response.orders[0].Height, 10) || service.height === null) &&
                     parseInt(response.orders[0].ServiceID, 10) ===
                     parseInt(service.serviceId, 10) &&
                     parseInt(response.orders[0].RequestedPackageTypeID, 10) ===
@@ -1181,6 +1297,7 @@
     }
 
     function handleServiceRates(services, callback) {
+
         const logs = ["Find cheapest rate in services"];
 
         services.forEach((service) => {
@@ -1310,7 +1427,7 @@
     <div class="form-group">
         <label class="control-label col-sm-3">Cheapest</label>
         <div class="col-sm-9" style="color: #6ba03a; padding: 7px 9px;">
-            <span>$${service.price} (${service.service}, ${service.package}, ${service.length}x${service.width}x${service.height})</span>
+            <span>$${parseFloat(service.price).toFixed(2)} (${service.service}, ${service.package}, ${service.length || service.order.Length}x${service.width || service.order.Width}x${service.height || service.order.Height})</span>
         </div>
     </div>
 </fieldset>
@@ -1318,6 +1435,7 @@
 
             callback(service);
         } else {
+            removeWip();
             console.error("Something went wrong.", services, service);
         }
     }
