@@ -369,20 +369,34 @@
         ],
     };
 
-    // Basically when dimensions are 20x12x[random variable]
+    // Basically when dimensions are [from these]
     // I want to rate check between USPS priority mail package and FedEx (ground if commercial, home delivery if residential)
     // And then assign lowest rate
     // Basically same like when dimensions are 14x12x3
-    [3, 4, 6, 8, 10, 12, 16, 20].forEach((height) => {
-        serviceMappings["20x12x" + height] = [
+    [
+        [60,4,4], //LWH
+        [60,6,6],
+        [60,8,8],
+        [60,10,10],
+        [60,12,12],
+        [20,12,3],
+        [20,12,4],
+        [20,12, 6],
+        [20,12,8],
+        [20,12,10],
+        [20,12,12],
+        [20,12,16],
+        [20,12,20]
+    ].forEach((dimensions) => {
+        serviceMappings[dimensions[0] + "x" + dimensions[1] + "x" + dimensions[2]] = [
             {
                 service: "USPS Priority Mail",
                 serviceId: 13,
                 package: "Package",
                 packageId: 3,
-                length: 20,
-                width: 12,
-                height: height,
+                length: dimensions[0],
+                width: dimensions[1],
+                height: dimensions[2],
                 providerId: 2,
                 carrierId: 1,
                 conditions: ['when_requested_shipping_service_is_not_60'],
@@ -392,9 +406,9 @@
                 serviceId: 51,
                 package: "Package",
                 packageId: 3,
-                length: 20,
-                width: 12,
-                height: height,
+                length: dimensions[0],
+                width: dimensions[1],
+                height: dimensions[2],
                 providerId: 4,
                 carrierId: 4,
                 conditions: ["residential", 'when_requested_shipping_service_is_not_60'],
@@ -404,9 +418,9 @@
                 serviceId: 50,
                 package: "Package",
                 packageId: 3,
-                length: 20,
-                width: 12,
-                height: height,
+                length: dimensions[0],
+                width: dimensions[1],
+                height: dimensions[2],
                 providerId: 4,
                 carrierId: 4,
                 conditions: ["not_residential", 'when_requested_shipping_service_is_not_60'],
@@ -416,9 +430,9 @@
                 serviceId: 55,
                 package: "Package",
                 packageId: 3,
-                length: 20,
-                width: 12,
-                height: height,
+                length: dimensions[0],
+                width: dimensions[1],
+                height: dimensions[2],
                 providerId: 4,
                 carrierId: 4,
                 conditions: ['when_requested_shipping_service_is_not_60'],
@@ -428,15 +442,15 @@
                 serviceId: 52,
                 package: "Package",
                 packageId: 3,
-                length: 20,
-                width: 12,
-                height: height,
+                length: dimensions[0],
+                width: dimensions[1],
+                height: dimensions[2],
                 providerId: 4,
                 carrierId: 4,
                 conditions: ['when_requested_shipping_service_is_not_60'],
             },
         ];
-    });
+    })
 
     serviceMappings['***'] = [
         {
@@ -598,12 +612,12 @@
 
     function setWip() {
         console.log("Work in progress")
-        $(".modal.order-detail").addClass('ss-wip');
+        getContainer().addClass('ss-wip');
     }
 
     function removeWip() {
         console.log("Done Work in progress")
-        $(".modal.order-detail").removeClass('ss-wip');
+        getContainer().removeClass('ss-wip');
     }
 
     /**
@@ -611,7 +625,7 @@
      */
     $(document).ajaxSuccess(function (event, xhr, options, data) {
         // For update rates request
-        const $container = $(".modal.order-detail");
+        const $container = getContainer();
 
         const length = $container.find('[name="LengthIn"]').val();
         const width = $container.find('[name="WidthIn"]').val();
@@ -804,6 +818,10 @@
         }
     });
 
+    function getContainer(){
+        return $(".modal.order-detail").length ? $(".modal.order-detail") : $('#order-drawer')
+    }
+
     /**
      * Set cheapest options
      * @param data
@@ -822,7 +840,7 @@
             return false;
         }
 
-        const $container = $(".modal.order-detail");
+        const $container = getContainer();
         setWip();
 
         if (
@@ -1113,7 +1131,7 @@
     }
 
     function currentlyViewingSameOrder(orderNumber) {
-        const text = $(".modal.order-detail .order-num").text();
+        const text = (($(".modal.order-detail .order-num a").text() || $('#order-drawer .order-title h2').text()) || '').trim();
         const same = text && orderNumber && text.includes(orderNumber);
 
         if (!same) {
@@ -1418,7 +1436,7 @@
             service.order &&
             currentlyViewingSameOrder(service.order.OrderNumber)
         ) {
-            const $container = $(".modal.order-detail");
+            const $container = getContainer();
 
             clearCheapestServiceMessaging();
 
