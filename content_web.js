@@ -36,6 +36,11 @@
     .ss-wip .btn-group.ship-btn-group a.quickship-toggle, .ss-wip .quick-ship-on .btn-group.ship-btn-group a.quickship-toggle{
       border-left: 1px solid #909090!important;
     }
+    
+    .ss-fwd-wip #order-grid{
+        pointer-events: none !important;
+        cursor: wait !important;
+    }
     </style>`;
 
     $('head').append(styles);
@@ -369,6 +374,16 @@
         ],
     };
 
+    $(document).on('click', '#orderlist-body tr', function(){
+
+        if($('#orderlist-body tr[data-ss-selected="1"]').length <= 1){
+            setTimeout(function(){
+                clickGetQuoteButton();
+            }, 1000);
+            clearCheapestServiceMessaging();
+        }
+    });
+
     // Basically when dimensions are [from these]
     // I want to rate check between USPS priority mail package and FedEx (ground if commercial, home delivery if residential)
     // And then assign lowest rate
@@ -610,14 +625,30 @@
         setWip();
     }
 
+    function isWip(){
+        return $('html').hasClass('ss-fwd-wip');
+    }
+
     function setWip() {
         console.log("Work in progress")
+        $('html').addClass('ss-fwd-wip');
         getContainer().addClass('ss-wip');
     }
 
     function removeWip() {
         console.log("Done Work in progress")
+        $('html').removeClass('ss-fwd-wip');
         getContainer().removeClass('ss-wip');
+    }
+
+    function clickGetQuoteButton(){
+        const $container = getContainer();
+        if($container){
+            logger("Clicking Get quote button...");
+            $container.find(".get-quote").click();
+        }
+
+        clearCheapestServiceMessaging();
     }
 
     /**
@@ -725,8 +756,8 @@
             } else {
                 logger(
                     "Low Priority request Sent by ShipStation",
-                    "Service ID: " + requestData.orderViewIs[0].ServiceID,
-                    "Package ID: " + requestData.orderViewIs[0].RequestedPackageTypeID,
+                    "Service ID: " + requestData.orderViews[0].ServiceID,
+                    "Package ID: " + requestData.orderViews[0].RequestedPackageTypeID,
                     "Request: ",
                     requestData,
                     "Response: ",
@@ -770,7 +801,7 @@
                 return;
             }
 
-            $(".modal.order-detail .get-quote").click();
+            clickGetQuoteButton();
         }
 
         // When the order modal is opened
@@ -800,7 +831,7 @@
 
             clearCheapestServiceMessaging();
 
-            $(".modal.order-detail .get-quote").click();
+            clickGetQuoteButton();
         } else {
             if (
                 typeof $container.find('[data-role="service-name"]').html() !=
@@ -1371,8 +1402,8 @@
                     0
                 );
 
-            logger("lowestDeliveryTimeService price : " + lowestDeliveryTimeService);
-            logger("lowestPriceService price : " + lowestPriceService);
+            logger("lowestDeliveryTimeService price : ", lowestDeliveryTimeService);
+            logger("lowestPriceService price : " , lowestPriceService);
             if (lowestPriceService.deliveryTime <= 2) {
                 logger("delivery time is 2 or below");
             } else {
