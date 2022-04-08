@@ -95,6 +95,30 @@
                 carrierId: 4,
                 conditions: ["residential", 'when_requested_shipping_service_is_not_60'],
             },
+            {
+                service: "UPS® Ground (UPS)",
+                serviceId: 26,
+                package: "Package",
+                packageId: 3,
+                length: 2,
+                width: 2,
+                height: 2,
+                providerId: 3,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60'],
+            },
+            {
+                service: "UPS® Ground (UPS by ShipStation)",
+                serviceId: 10301,
+                package: "Package",
+                packageId: 3,
+                length: 2,
+                width: 2,
+                height: 2,
+                providerId: 103,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60'],
+            },
         ],
         "9x12x1": [
             {
@@ -151,6 +175,30 @@
                 providerId: 4,
                 carrierId: 4,
                 conditions: ["not_residential", 'when_requested_shipping_service_is_not_60'],
+            },
+            {
+                service: "UPS® Ground (UPS)",
+                serviceId: 26,
+                package: "Package",
+                packageId: 3,
+                length: 9,
+                width: 12,
+                height: 1,
+                providerId: 3,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60'],
+            },
+            {
+                service: "UPS® Ground (UPS by ShipStation)",
+                serviceId: 10301,
+                package: "Package",
+                packageId: 3,
+                length: 9,
+                width: 12,
+                height: 1,
+                providerId: 103,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60'],
             },
             {
                 service: "FedEx Standard Overnight®",
@@ -233,6 +281,30 @@
                 carrierId: 4,
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
+            {
+                service: "UPS® Ground (UPS)",
+                serviceId: 26,
+                package: "Package",
+                packageId: 3,
+                length: 12,
+                width: 15,
+                height: 1,
+                providerId: 3,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60']
+            },
+            {
+                service: "UPS® Ground (UPS by ShipStation)",
+                serviceId: 10301,
+                package: "Package",
+                packageId: 3,
+                length: 12,
+                width: 15,
+                height: 1,
+                providerId: 103,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60']
+            },
         ],
         "14x12x3": [
             {
@@ -302,6 +374,30 @@
                 carrierId: 4,
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
+            {
+                service: "UPS® Ground (UPS)",
+                serviceId: 26,
+                package: "Package",
+                packageId: 3,
+                length: 14,
+                width: 12,
+                height: 3,
+                providerId: 3,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60']
+            },
+            {
+                service: "UPS® Ground (UPS by ShipStation)",
+                serviceId: 10301,
+                package: "Package",
+                packageId: 3,
+                length: 14,
+                width: 12,
+                height: 3,
+                providerId: 103,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60']
+            },
         ],
         "15x12x3": [
             {
@@ -369,6 +465,30 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
+                conditions: ['when_requested_shipping_service_is_not_60']
+            },
+            {
+                service: "UPS® Ground (UPS)",
+                serviceId: 26,
+                package: "Package",
+                packageId: 3,
+                length: 15,
+                width: 12,
+                height: 3,
+                providerId: 3,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60']
+            },
+            {
+                service: "UPS® Ground (UPS by ShipStation)",
+                serviceId: 10301,
+                package: "Package",
+                packageId: 3,
+                length: 15,
+                width: 12,
+                height: 3,
+                providerId: 103,
+                carrierId: 3,
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
         ],
@@ -463,6 +583,30 @@
                 providerId: 4,
                 carrierId: 4,
                 conditions: ['when_requested_shipping_service_is_not_60'],
+            },
+            {
+                service: "UPS® Ground (UPS)",
+                serviceId: 26,
+                package: "Package",
+                packageId: 3,
+                length: dimensions[0],
+                width: dimensions[1],
+                height: dimensions[2],
+                providerId: 3,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60']
+            },
+            {
+                service: "UPS® Ground (UPS by ShipStation)",
+                serviceId: 10301,
+                package: "Package",
+                packageId: 3,
+                length: dimensions[0],
+                width: dimensions[1],
+                height: dimensions[2],
+                providerId: 103,
+                carrierId: 3,
+                conditions: ['when_requested_shipping_service_is_not_60']
             },
         ];
     })
