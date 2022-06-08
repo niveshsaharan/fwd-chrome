@@ -1306,7 +1306,7 @@
     }
 
     function currentlyViewingSameOrder(orderNumber) {
-        const text = (($(".modal.order-detail .order-num a").text() || $('#order-drawer .order-title h2').text()) || '').trim();
+        const text = (($(".modal.order-detail .order-num a").text() || $(".modal.order-detail .order-num").text() || $('#order-drawer .order-title h2').text()) || '').trim();
         const same = text && orderNumber && text.includes(orderNumber);
 
         if (!same) {
