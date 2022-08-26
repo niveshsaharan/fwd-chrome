@@ -824,8 +824,8 @@
                     length == 9 &&
                     width == 12 &&
                     height == 1 &&
-                    requestedFor != "2-Day Delivery" &&
-                    requestedFor != "Next Day Delivery" &&
+                    ! requestedFor.toLowerCase().includes("2-day delivery") &&
+                    ! requestedFor.toLowerCase().includes("next day delivery") &&
                     (($container.find('[name="WeightPound"]').val() == 0 &&
                         $container.find('[name="WeightOunce"]').val() >= 15) ||
                         ($container.find('[name="WeightPound"]').val() == 1 &&
@@ -866,8 +866,8 @@
                     length == 9 &&
                     width == 12 &&
                     height == 1 &&
-                    requestedFor != "2-Day Delivery" &&
-                    requestedFor != "Next Day Delivery" &&
+                    ! requestedFor.toLowerCase().includes("2-day delivery") &&
+                    ! requestedFor.toLowerCase().includes("next day delivery") &&
                     $container.find('[name="WeightPound"]').val() == 0 &&
                     $container.find('[name="WeightOunce"]').val() < 15
                 ) {
@@ -1162,13 +1162,13 @@
 
         const size = length + "x" + width + "x" + height;
         var exceptionDimentions = ["2x2x2"];
-        var exceptionServiceReq = ["2-Day Delivery", "Next Day Delivery"];
+        var exceptionServiceReq = ["2-day delivery", "next day delivery"]; // TODO
 
         if (typeof serviceMappingWithPrices[size] === "object" || typeof serviceMappingWithPrices['***'] === "object") {
             if (
                 exceptionDimentions.includes(size) &&
                 !exceptionServiceReq.includes(
-                    data.orderViews[0].RequestedShippingService.replace(/\"/g, "")
+                    data.orderViews[0].RequestedShippingService.toLowerCase().replace(/\"/g, "")
                 )
             ) {
                 logger("Exceptional size. Tool will not trigger.");
@@ -1353,8 +1353,8 @@
                             response.orders[0].ResidentialIndicator;
 
                         if (
-                            service.shippingService == "2-Day Delivery" ||
-                            service.shippingService == "Next Day Delivery"
+                            service.shippingService.toLowerCase().includes("2-day delivery") ||
+                            service.shippingService.toLowerCase().includes("next day delivery")
                         ) {
                             logger("Its 2 day deliver");
                         } else {
@@ -1374,8 +1374,8 @@
                             logger("service id is 50 51 52");
                         }
                         if (
-                            service.shippingService == "2-Day Delivery" ||
-                            service.shippingService == "Next Day Delivery"
+                            service.shippingService.toLowerCase().includes("2-day delivery") ||
+                            service.shippingService.toLowerCase().includes("next day delivery")
                         ) {
                             if (
                                 service.serviceId == 50 ||
@@ -1511,8 +1511,8 @@
         //check if its "2-Day Delivery" or "Next Day Delivery"
         const counter = services.filter(
             (service) =>
-                service.shippingService == "2-Day Delivery" ||
-                service.shippingService == "Next Day Delivery"
+                service.shippingService.toLowerCase().includes("2-day delivery") ||
+                service.shippingService.toLowerCase().includes("next day delivery")
         ).length;
 
         if (counter >= 1) {
@@ -1521,8 +1521,8 @@
                     (service) =>
                         service.price > 0 &&
                         service.deliveryTime <= 2 &&
-                        (service.shippingService == "2-Day Delivery" ||
-                            service.shippingService == "Next Day Delivery") &&
+                        (service.shippingService.toLowerCase().includes("2-day delivery") ||
+                            service.shippingService.toLowerCase().includes("next day delivery")) &&
                         (service.serviceId == 50 ||
                             service.serviceId == 51 ||
                             service.serviceId == 52 ||
@@ -1534,8 +1534,8 @@
                 .filter(
                     (service) =>
                         service.deliveryTime <= 2 &&
-                        (service.shippingService == "2-Day Delivery" ||
-                            service.shippingService == "Next Day Delivery") &&
+                        (service.shippingService.toLowerCase().includes("2-day delivery") ||
+                            service.shippingService.toLowerCase().includes("next day delivery")) &&
                         (service.serviceId == 50 ||
                             service.serviceId == 51 ||
                             service.serviceId == 52 ||
@@ -1557,13 +1557,13 @@
                 logger(typeof lowestPriceService.deliveryTime);
             }
             if (
-                lowestPriceService.shippingService == "2-Day Delivery" &&
+                lowestPriceService.shippingService.toLowerCase().includes("2-day delivery") &&
                 lowestPriceService.deliveryTime <= 2
             ) {
                 logger("setting service with lowest price for 2-Day Delivery service");
                 service = lowestPriceService;
             } else if (
-                lowestPriceService.shippingService == "Next Day Delivery" &&
+                lowestPriceService.shippingService.toLowerCase().includes("next day delivery") &&
                 lowestPriceService.deliveryTime <= 1
             ) {
                 logger(
@@ -1574,7 +1574,7 @@
                         (service) =>
                             service.price > 0 &&
                             service.deliveryTime <= 2 &&
-                            service.shippingService == "Next Day Delivery" &&
+                            service.shippingService.toLowerCase().includes("next day delivery") &&
                             service.serviceId == 55
                     )
                     .reduce((prev, curr) => (prev.price < curr.price ? prev : curr), 0);
@@ -1584,7 +1584,7 @@
                         (service) =>
                             (service.price > 0 &&
                                 service.deliveryTime <= 2 &&
-                                service.shippingService == "Next Day Delivery" &&
+                                service.shippingService.toLowerCase().includes("next day delivery") &&
                                 service.serviceId == 50) ||
                             service.serviceId == 51
                     )
