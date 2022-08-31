@@ -1511,8 +1511,8 @@
         //check if its "2-Day Delivery" or "Next Day Delivery"
         const counter = services.filter(
             (service) =>
-                service.shippingService.toLowerCase().includes("2-day delivery") ||
-                service.shippingService.toLowerCase().includes("next day delivery")
+                (service.shippingService && service.shippingService.toLowerCase().includes("2-day delivery")) ||
+                (service.shippingService && service.shippingService.toLowerCase().includes("next day delivery"))
         ).length;
 
         if (counter >= 1) {
