@@ -29,6 +29,9 @@
         when_requested_shipping_service_is_not_60: function (data) {
             return data.RequestedShippingServiceID !== 60;
         },
+        when_dimensions_are_not_empty: function (data) {
+            return data.Length && data.Width && data.Height;
+        },
         when_requested_shipping_service_is_in: function (data, values) {
             return values.includes(data.RequestedShippingService);
         },
@@ -801,7 +804,9 @@
             height: null,
             providerId: 2,
             carrierId: 1,
-            conditions: [{
+            conditions: [
+                'when_dimensions_are_not_empty',
+                {
                 'function': 'when_requested_shipping_service_contain',
                 args: [['Free Standard Shipping - Canada']]
             }],
@@ -816,7 +821,9 @@
             height: null,
             providerId: 2,
             carrierId: 1,
-            conditions: [{
+            conditions: [
+                'when_dimensions_are_not_empty',
+                {
                 'function': 'when_requested_shipping_service_contain',
                 args: [['Free Standard Shipping - Canada']]
             }],
@@ -831,7 +838,9 @@
             packageId:  3,
             providerId:  2,
             carrierId:  1,
-            conditions: [{
+            conditions: [
+                'when_dimensions_are_not_empty',
+                {
                 'function': 'when_requested_shipping_service_contain',
                 args: [['Free Standard Shipping - Canada']]
             }],
@@ -846,7 +855,9 @@
             packageId:  3,
             providerId:  4,
             carrierId:  4,
-            conditions: [{
+            conditions: [
+                'when_dimensions_are_not_empty',
+                {
                 'function': 'when_requested_shipping_service_contain',
                 args: [['Free Standard Shipping - Canada']]
             }],
@@ -862,7 +873,9 @@
             packageId:  3,
             providerId:  4,
             carrierId:  4,
-            conditions: [{
+            conditions: [
+                'when_dimensions_are_not_empty',
+                {
                 'function': 'when_requested_shipping_service_contain',
                 args: [['Expedited Shipping - Canada']]
             }],
@@ -878,7 +891,9 @@
             packageId:  3,
             providerId:  4,
             carrierId:  4,
-            conditions: [{
+            conditions: [
+                'when_dimensions_are_not_empty',
+                {
                 'function': 'when_requested_shipping_service_contain',
                 args: [['Premium Shipping - Canada']]
             }],
@@ -893,7 +908,9 @@
             length: null,
             width: null,
             height: null,
-            conditions: [{
+            conditions: [
+                'when_dimensions_are_not_empty',
+                {
                 'function': 'when_requested_shipping_service_contain',
                 args: [['Premium Shipping - Canada']]
             }],
