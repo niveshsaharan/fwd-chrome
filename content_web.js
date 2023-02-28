@@ -1,3 +1,10 @@
+/**
+ * copy(`serviceId:  ${temp1.ServiceID},
+ packageId:  ${temp1.RequestedPackageTypeID},
+ providerId:  ${temp1.ProviderID},
+ carrierId:  ${temp1.CarrierID},`  )
+ */
+
 (function () {
     if (typeof Backbone === "undefined") {
         console.error("Backbone not found.");
@@ -780,7 +787,117 @@
                 'function': 'when_requested_shipping_service_is_in',
                 args: [['FedEx International Economy', 'FedEx International Standard', 'FedEx International Connect Plus']]
             }],
-        }
+        },
+
+        // 27th Feb
+        // Requested Shipping Service contains “Free Standard Shipping - Canada”
+        {
+            service: "USPS First Class Mail Intl",
+            serviceId: 17,
+            package: "Package",
+            packageId: 3,
+            length: null,
+            width: null,
+            height: null,
+            providerId: 2,
+            carrierId: 1,
+            conditions: [{
+                'function': 'when_requested_shipping_service_contain',
+                args: [['Free Standard Shipping - Canada']]
+            }],
+        },
+        {
+            service: "USPS Priority Mail Intl",
+            serviceId: 16,
+            package: "Package",
+            packageId: 3,
+            length: null,
+            width: null,
+            height: null,
+            providerId: 2,
+            carrierId: 1,
+            conditions: [{
+                'function': 'when_requested_shipping_service_contain',
+                args: [['Free Standard Shipping - Canada']]
+            }],
+        },
+        {
+            service: "FedEx International Economy",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  16,
+            packageId:  3,
+            providerId:  2,
+            carrierId:  1,
+            conditions: [{
+                'function': 'when_requested_shipping_service_contain',
+                args: [['Free Standard Shipping - Canada']]
+            }],
+        },
+        {
+            service: "FedEx International Connect Plus",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  4011,
+            packageId:  3,
+            providerId:  4,
+            carrierId:  4,
+            conditions: [{
+                'function': 'when_requested_shipping_service_contain',
+                args: [['Free Standard Shipping - Canada']]
+            }],
+        },
+        // Requested Shipping Service contains “Expedited Shipping - Canada”
+        {
+            service: "FedEx International Priority",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  60,
+            packageId:  3,
+            providerId:  4,
+            carrierId:  4,
+            conditions: [{
+                'function': 'when_requested_shipping_service_contain',
+                args: [['Expedited Shipping - Canada']]
+            }],
+        },
+        // Requested Shipping Service contains “Premium Shipping - Canada”
+        {
+            service: "FedEx International Economy",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  59,
+            packageId:  3,
+            providerId:  4,
+            carrierId:  4,
+            conditions: [{
+                'function': 'when_requested_shipping_service_contain',
+                args: [['Premium Shipping - Canada']]
+            }],
+        },
+        {
+            service: "FedEx International Connect Plus",
+            package: "Package",
+            serviceId:  4011,
+            packageId:  3,
+            providerId:  4,
+            carrierId:  4,
+            length: null,
+            width: null,
+            height: null,
+            conditions: [{
+                'function': 'when_requested_shipping_service_contain',
+                args: [['Premium Shipping - Canada']]
+            }],
+        },
     ];
 
     Object.keys(serviceMappings).forEach(size => {

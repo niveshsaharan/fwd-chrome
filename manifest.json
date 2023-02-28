@@ -1,6 +1,6 @@
 {
   "name": "FWD - ShipStation",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "A Chrome extension to select the best available shipping rates!",
   "permissions": [
     "storage",
