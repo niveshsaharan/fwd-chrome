@@ -834,10 +834,10 @@
             length: null,
             width: null,
             height: null,
-            serviceId:  16,
+            serviceId:  59,
             packageId:  3,
-            providerId:  2,
-            carrierId:  1,
+            providerId:  4,
+            carrierId:  4,
             conditions: [
                 'when_dimensions_are_not_empty',
                 {
