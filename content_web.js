@@ -793,7 +793,7 @@
         },
 
         // 27th Feb
-        // Requested Shipping Service contains “Free Standard Shipping - Canada”
+        // Requested Shipping Service contains “Standard Shipping - Canada”
         {
             service: "USPS First Class Mail Intl",
             serviceId: 17,
@@ -808,7 +808,7 @@
                 'when_dimensions_are_not_empty',
                 {
                 'function': 'when_requested_shipping_service_contain',
-                args: [['Free Standard Shipping - Canada']]
+                args: [['Standard Shipping - Canada']]
             }],
         },
         {
@@ -825,7 +825,7 @@
                 'when_dimensions_are_not_empty',
                 {
                 'function': 'when_requested_shipping_service_contain',
-                args: [['Free Standard Shipping - Canada']]
+                args: [['Standard Shipping - Canada']]
             }],
         },
         {
@@ -842,7 +842,7 @@
                 'when_dimensions_are_not_empty',
                 {
                 'function': 'when_requested_shipping_service_contain',
-                args: [['Free Standard Shipping - Canada']]
+                args: [['Standard Shipping - Canada']]
             }],
         },
         {
@@ -859,7 +859,7 @@
                 'when_dimensions_are_not_empty',
                 {
                 'function': 'when_requested_shipping_service_contain',
-                args: [['Free Standard Shipping - Canada']]
+                args: [['Standard Shipping - Canada']]
             }],
         },
         // Requested Shipping Service contains “Expedited Shipping - Canada”
