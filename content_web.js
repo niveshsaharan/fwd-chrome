@@ -1127,10 +1127,11 @@
                     ! requestedFor.toLowerCase().includes("2-day delivery") &&
                     ! requestedFor.toLowerCase().includes("next day delivery") &&
                     $container.find('[name="WeightPound"]').val() == 0 &&
-                    $container.find('[name="WeightOunce"]').val() < 15
+                    $container.find('[name="WeightOunce"]').val() < 15 && isCustomerCountry($container, 'US')
                 ) {
                     $(".rating").find(".processing-icon").remove();
                     $(".col-sm-9.form-control-static").show();
+
                     //code to show checkbox
                     if ($(".modal-body") != "undefined" && $(".modal-body").find(".col-sm-9.form-control-static").find("#cheapest-service-icon").length == 0) {
                         $(".modal-body")
@@ -1253,6 +1254,15 @@
 
     function getContainer(){
         return $(".modal.order-detail").length ? $(".modal.order-detail") : $('#order-drawer')
+    }
+
+    function isCustomerCountry($container, $countryCode){
+        try{
+            return ($container.find('.verify-address-address-content').closest('td').text() || '').includes(' ' + $countryCode + '\n')
+        }catch (e) {
+        }
+
+        return null;
     }
 
     /**
