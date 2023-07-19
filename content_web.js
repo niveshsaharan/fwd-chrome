@@ -1088,6 +1088,7 @@
                         $container.find('[name="WeightOunce"]').val() >= 15) ||
                         ($container.find('[name="WeightPound"]').val() == 1 &&
                             $container.find('[name="WeightOunce"]').val() <= 5))
+                    && isCustomerCountry($container, 'US')
                 ) {
                     if ($container.find('[name="WeightPound"]').val() != 0) {
                         $container.find('[name="WeightPound"]').val(0).trigger("change");
