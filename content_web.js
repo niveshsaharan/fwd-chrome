@@ -915,6 +915,28 @@
                 args: [['Premium Shipping - Canada']]
             }],
         },
+        /**
+         * Additionally, I would also like to make another version of the chrome extension identical
+         * to the current version (where UPS is included) but would like to include USPS Ground Advantage
+         * for orders that have requested service contains "Free Shipping" or "Standard Shipping"
+         */
+        {
+            service: "USPS Ground Advantage",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  3512,
+            packageId:  3,
+            providerId:  2,
+            carrierId:  1,
+            conditions: [
+                'when_dimensions_are_not_empty',
+                {
+                'function': 'when_requested_shipping_service_contain',
+                args: [['Free Shipping', 'Standard Shipping']]
+            }],
+        },
     ];
 
     Object.keys(serviceMappings).forEach(size => {
@@ -1622,8 +1644,8 @@
                             response.orders[0].ResidentialIndicator;
 
                         if (
-                            service.shippingService.toLowerCase().includes("2-day delivery") ||
-                            service.shippingService.toLowerCase().includes("next day delivery")
+                            service.shippingService?.toLowerCase().includes("2-day delivery") ||
+                            service.shippingService?.toLowerCase().includes("next day delivery")
                         ) {
                             logger("Its 2 day deliver");
                         } else {
@@ -1643,8 +1665,8 @@
                             logger("service id is 50 51 52");
                         }
                         if (
-                            service.shippingService.toLowerCase().includes("2-day delivery") ||
-                            service.shippingService.toLowerCase().includes("next day delivery")
+                            service.shippingService?.toLowerCase().includes("2-day delivery") ||
+                            service.shippingService?.toLowerCase().includes("next day delivery")
                         ) {
                             if (
                                 service.serviceId == 50 ||
@@ -1780,8 +1802,8 @@
         //check if its "2-Day Delivery" or "Next Day Delivery"
         const counter = services.filter(
             (service) =>
-                (service.shippingService && service.shippingService.toLowerCase().includes("2-day delivery")) ||
-                (service.shippingService && service.shippingService.toLowerCase().includes("next day delivery"))
+                (service.shippingService && service.shippingService?.toLowerCase().includes("2-day delivery")) ||
+                (service.shippingService && service.shippingService?.toLowerCase().includes("next day delivery"))
         ).length;
 
         if (counter >= 1) {
@@ -1790,8 +1812,8 @@
                     (service) =>
                         service.price > 0 &&
                         service.deliveryTime <= 2 &&
-                        (service.shippingService.toLowerCase().includes("2-day delivery") ||
-                            service.shippingService.toLowerCase().includes("next day delivery")) &&
+                        (service.shippingService?.toLowerCase().includes("2-day delivery") ||
+                            service.shippingService?.toLowerCase().includes("next day delivery")) &&
                         (service.serviceId == 50 ||
                             service.serviceId == 51 ||
                             service.serviceId == 52 ||
@@ -1803,8 +1825,8 @@
                 .filter(
                     (service) =>
                         service.deliveryTime <= 2 &&
-                        (service.shippingService.toLowerCase().includes("2-day delivery") ||
-                            service.shippingService.toLowerCase().includes("next day delivery")) &&
+                        (service.shippingService?.toLowerCase().includes("2-day delivery") ||
+                            service.shippingService?.toLowerCase().includes("next day delivery")) &&
                         (service.serviceId == 50 ||
                             service.serviceId == 51 ||
                             service.serviceId == 52 ||
@@ -1843,7 +1865,7 @@
                         (service) =>
                             service.price > 0 &&
                             service.deliveryTime <= 2 &&
-                            service.shippingService.toLowerCase().includes("next day delivery") &&
+                            service.shippingService?.toLowerCase().includes("next day delivery") &&
                             service.serviceId == 55
                     )
                     .reduce((prev, curr) => (prev.price < curr.price ? prev : curr), 0);
@@ -1853,7 +1875,7 @@
                         (service) =>
                             (service.price > 0 &&
                                 service.deliveryTime <= 2 &&
-                                service.shippingService.toLowerCase().includes("next day delivery") &&
+                                service.shippingService?.toLowerCase().includes("next day delivery") &&
                                 service.serviceId == 50) ||
                             service.serviceId == 51
                     )
