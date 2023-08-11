@@ -86,6 +86,10 @@
             carrierId:  1,
             conditions: [
                 'when_requested_shipping_service_is_not_60',
+                {
+                    'function': 'when_requested_shipping_service_does_not_contain',
+                    args: [['premium shipping']]
+                }
             ],
         };
 
