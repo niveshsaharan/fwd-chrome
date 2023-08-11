@@ -93,6 +93,35 @@
             ],
         };
 
+    /**
+     * also for all instances where we have USPS priority mail, can we also include "UPS Ground Saver" with package type "package" [EXCEPT where requested service contains "Premium Shipping"]
+     *
+     * So the implementation for "UPS Ground Saver" will be the same as "USPS Ground Advantage"
+     *
+     * This is another new service that was introduced
+     *
+     * @type {{package: string, service: string, providerId: number, length: null, width: null, packageId: number, serviceId: number, carrierId: number, conditions: [string,{args: string[][], function: string}], height: null}}
+     */
+    const upsGroundSaver =
+        {
+            service: "UPS Ground Saver",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  10391,
+            packageId:  3,
+            providerId:  103,
+            carrierId:  3,
+            conditions: [
+                'when_requested_shipping_service_is_not_60',
+                {
+                    'function': 'when_requested_shipping_service_does_not_contain',
+                    args: [['premium shipping']]
+                }
+            ],
+        };
+
     const serviceMappings = {
         "2x2x2": [
             {
@@ -189,6 +218,7 @@
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
             uspsGroundAdvantage,
+            upsGroundSaver,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -295,6 +325,7 @@
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
             uspsGroundAdvantage,
+            upsGroundSaver,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -402,6 +433,7 @@
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
             uspsGroundAdvantage,
+            upsGroundSaver,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -496,6 +528,7 @@
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
             uspsGroundAdvantage,
+            upsGroundSaver,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -614,6 +647,7 @@
                 conditions: ['when_requested_shipping_service_is_not_60'],
             },
             uspsGroundAdvantage,
+            upsGroundSaver,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
