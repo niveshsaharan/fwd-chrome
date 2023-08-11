@@ -67,6 +67,28 @@
 
     $('head').append(styles);
 
+    /**
+     * Additionally, I would also like to make another version of the chrome extension identical
+     * to the current version (where UPS is included) but would like to include USPS Ground Advantage
+     * for orders that have requested service contains "Free Shipping" or "Standard Shipping"
+     */
+
+    const uspsGroundAdvantage =
+        {
+            service: "USPS Ground Advantage",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  3512,
+            packageId:  3,
+            providerId:  2,
+            carrierId:  1,
+            conditions: [
+                'when_requested_shipping_service_is_not_60',
+            ],
+        };
+
     const serviceMappings = {
         "2x2x2": [
             {
@@ -162,6 +184,7 @@
                 },
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
+            uspsGroundAdvantage,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -267,6 +290,7 @@
                 },
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
+            uspsGroundAdvantage,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -373,6 +397,7 @@
                 },
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
+            uspsGroundAdvantage,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -466,6 +491,7 @@
                 },
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
+            uspsGroundAdvantage,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -583,6 +609,7 @@
                 carrierId: 1,
                 conditions: ['when_requested_shipping_service_is_not_60'],
             },
+            uspsGroundAdvantage,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -913,28 +940,6 @@
                 {
                 'function': 'when_requested_shipping_service_contain',
                 args: [['Premium Shipping - Canada']]
-            }],
-        },
-        /**
-         * Additionally, I would also like to make another version of the chrome extension identical
-         * to the current version (where UPS is included) but would like to include USPS Ground Advantage
-         * for orders that have requested service contains "Free Shipping" or "Standard Shipping"
-         */
-        {
-            service: "USPS Ground Advantage",
-            package: "Package",
-            length: null,
-            width: null,
-            height: null,
-            serviceId:  3512,
-            packageId:  3,
-            providerId:  2,
-            carrierId:  1,
-            conditions: [
-                'when_dimensions_are_not_empty',
-                {
-                'function': 'when_requested_shipping_service_contain',
-                args: [['Free Shipping', 'Standard Shipping']]
             }],
         },
     ];
@@ -1848,13 +1853,13 @@
                 logger(typeof lowestPriceService.deliveryTime);
             }
             if (
-                lowestPriceService.shippingService.toLowerCase().includes("2-day delivery") &&
+                lowestPriceService?.shippingService?.toLowerCase().includes("2-day delivery") &&
                 lowestPriceService.deliveryTime <= 2
             ) {
                 logger("setting service with lowest price for 2-Day Delivery service");
                 service = lowestPriceService;
             } else if (
-                lowestPriceService.shippingService.toLowerCase().includes("next day delivery") &&
+                lowestPriceService?.shippingService?.toLowerCase().includes("next day delivery") &&
                 lowestPriceService.deliveryTime <= 1
             ) {
                 logger(
