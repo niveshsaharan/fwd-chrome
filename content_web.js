@@ -770,44 +770,47 @@
             [20, 12, 6]
         ].forEach((dimensions) => {
         serviceMappings[dimensions[0] + "x" + dimensions[1] + "x" + dimensions[2]] = serviceMappings[dimensions[0] + "x" + dimensions[1] + "x" + dimensions[2]] || [];
-        serviceMappings[dimensions[0] + "x" + dimensions[1] + "x" + dimensions[2]].push(
-            {
-                service: "FedEx Express Saver",
-                serviceId: 54,
-                package: "FedEx One Rate Extra Large Box",
-                packageId: 503,
-                length: dimensions[0],
-                width: dimensions[1],
-                height: dimensions[2],
-                providerId: 4,
-                carrierId: 4,
-                conditions: [
-                    'when_requested_shipping_service_is_not_60',
-                    {
-                        'function': 'when_requested_shipping_service_does_not_contain',
-                        args: [['2-day', '2 day']]
-                    }],
-            });
 
-        // 2 day
-        serviceMappings[dimensions[0] + "x" + dimensions[1] + "x" + dimensions[2]].push(
-            {
-                service: "FedEx 2Day®",
-                serviceId: 52,
-                package: "FedEx One Rate Extra Large Box",
-                packageId: 503,
-                length: dimensions[0],
-                width: dimensions[1],
-                height: dimensions[2],
-                providerId: 4,
-                carrierId: 4,
-                conditions: [
-                    'when_requested_shipping_service_is_not_60',
-                    {
-                        'function': 'when_requested_shipping_service_contain',
-                        args: [['2-day', '2 day']]
-                    }],
-            });
+        if(dimensions[0] + "x" + dimensions[1] + "x" + dimensions[2] !== '20x12x8') {
+            serviceMappings[dimensions[0] + "x" + dimensions[1] + "x" + dimensions[2]].push(
+                {
+                    service: "FedEx Express Saver",
+                    serviceId: 54,
+                    package: "FedEx One Rate Extra Large Box",
+                    packageId: 503,
+                    length: dimensions[0],
+                    width: dimensions[1],
+                    height: dimensions[2],
+                    providerId: 4,
+                    carrierId: 4,
+                    conditions: [
+                        'when_requested_shipping_service_is_not_60',
+                        {
+                            'function': 'when_requested_shipping_service_does_not_contain',
+                            args: [['2-day', '2 day']]
+                        }],
+                });
+
+            // 2 day
+            serviceMappings[dimensions[0] + "x" + dimensions[1] + "x" + dimensions[2]].push(
+                {
+                    service: "FedEx 2Day®",
+                    serviceId: 52,
+                    package: "FedEx One Rate Extra Large Box",
+                    packageId: 503,
+                    length: dimensions[0],
+                    width: dimensions[1],
+                    height: dimensions[2],
+                    providerId: 4,
+                    carrierId: 4,
+                    conditions: [
+                        'when_requested_shipping_service_is_not_60',
+                        {
+                            'function': 'when_requested_shipping_service_contain',
+                            args: [['2-day', '2 day']]
+                        }],
+                });
+        }
     })
 
     serviceMappings['***'] = [
