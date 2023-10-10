@@ -67,6 +67,11 @@
 
     $('head').append(styles);
 
+    const serviceSelectionPriorities = {
+        "FedEx 2Day®___FedEx Express Saver": "FedEx 2Day®",
+        "FedEx Express Saver___FedEx 2Day®": "FedEx 2Day®",
+    };
+
     /**
      * Additionally, I would also like to make another version of the chrome extension identical
      * to the current version (where UPS is included) but would like to include USPS Ground Advantage
@@ -1937,9 +1942,10 @@
                 service = lowestDeliveryTimeService;
             }
         } else {
-            service = services
-                .filter((service) => service.price > 0)
-                .reduce((prev, curr) => (prev.price < curr.price ? prev : curr), 0);
+            service = services.filter((service) => service.price > 0)
+                .reduce((prev, curr) => {
+                    return (prev.price <= curr.price && (typeof serviceSelectionPriorities[curr.service + '___' + prev.service] === "undefined" || serviceSelectionPriorities[curr.service + '___' + prev.service] === prev.service) ? prev : curr)
+                }, 0)
         }
 
         if (
