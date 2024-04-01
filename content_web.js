@@ -29,6 +29,9 @@
         when_requested_shipping_service_is_not_60: function (data) {
             return data.RequestedShippingServiceID !== 60;
         },
+        when_weight_between: function (data, min, max) { // in oz
+            return data.Weight >= min && data.Weight <= max && data.WeightUnitOfMeasure === 'Ounce';
+        },
         when_dimensions_are_not_empty: function (data) {
             return data.Length && data.Width && data.Height;
         },
@@ -71,6 +74,54 @@
         "FedEx 2Day®___FedEx Express Saver": "FedEx 2Day®",
         "FedEx Express Saver___FedEx 2Day®": "FedEx 2Day®",
     };
+
+    const dhlSmartMailParcelPlusExpedited =
+        {
+            service: "DHL SmartMail Parcel Plus Expedited",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  74,
+            packageId:  3,
+            providerId:  6,
+            carrierId:  7,
+            conditions: [
+                'when_requested_shipping_service_is_not_60',
+                {
+                    'function': 'when_requested_shipping_service_does_not_contain',
+                    args: [['premium shipping', 'expedited']]
+                },
+                {
+                    'function': 'when_weight_between',
+                    args: [0, 16]
+                }
+            ],
+        };
+
+    const dhlSMParcelExpeditedMax =
+        {
+            service: "DHL SM Parcel Expedited Max",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  8346,
+            packageId:  3,
+            providerId:  6,
+            carrierId:  7,
+            conditions: [
+                'when_requested_shipping_service_is_not_60',
+                {
+                    'function': 'when_requested_shipping_service_does_not_contain',
+                    args: [['premium shipping', 'expedited']]
+                },
+                {
+                    'function': 'when_weight_between',
+                    args: [0, 16]
+                }
+            ],
+        };
 
     /**
      * Additionally, I would also like to make another version of the chrome extension identical
@@ -224,6 +275,8 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            dhlSmartMailParcelPlusExpedited,
+            dhlSMParcelExpeditedMax,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -331,6 +384,8 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            dhlSmartMailParcelPlusExpedited,
+            dhlSMParcelExpeditedMax,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -439,6 +494,8 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            dhlSmartMailParcelPlusExpedited,
+            dhlSMParcelExpeditedMax,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -534,6 +591,8 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            dhlSmartMailParcelPlusExpedited,
+            dhlSMParcelExpeditedMax,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -653,6 +712,8 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            dhlSmartMailParcelPlusExpedited,
+            dhlSMParcelExpeditedMax,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -1104,16 +1165,29 @@
         return $('html').hasClass('ss-fwd-wip');
     }
 
+    const ship_plus_wip_html = `<label class="control-label col-sm-3">Shipping+</label>
+<div class="col-sm-9" style="padding: 7px 9px;">
+<span>working...</span>
+</div>`
+
     function setWip() {
         console.log("Work in progress")
         $('html').addClass('ss-fwd-wip');
         getContainer().addClass('ss-wip');
+        if(! $('#ship-plus-wip').length){
+            $('.ship-details .ship-general').append(`<div id="ship-plus-wip" class="form-group">
+${ship_plus_wip_html}
+</div>`)
+        }else{
+            $('#ship-plus-wip').html(ship_plus_wip_html);
+        }
     }
 
     function removeWip() {
         console.log("Done Work in progress")
         $('html').removeClass('ss-fwd-wip');
         getContainer().removeClass('ss-wip');
+        $('#ship-plus-wip').remove();
     }
 
     function clickGetQuoteButton(){
@@ -1142,7 +1216,7 @@
                 return;
             }
         } else if (options.url.endsWith("/api/orders/updaterates")) {
-            if (
+            /*if (
                 typeof $container.find('[data-role="service-name"]').html() !=
                 "undefined"
             ) {
@@ -1217,7 +1291,7 @@
                     removeWip();
                     return;
                 }
-            }
+            }*/
             const requestData = JSON.parse(options.data);
 
             if (data.final) {
