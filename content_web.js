@@ -188,6 +188,32 @@
             ],
         };
 
+
+    /**
+     * Also Nivesh - can we add another carrier/service/package type for the chrome extension?
+     * The request is as follows: Rate Shop - Add Service - " *FedEx SmartPost Parcel Select* "
+     * with package type set to " *Package* " wherever we are rate shopping " *UPS Ground Saver"*
+     */
+    const fedexSmartPostParcelSelect =
+        {
+            service: "FedEx SmartPost Parcel Select",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  66,
+            packageId:  3,
+            providerId:  4,
+            carrierId:  4,
+            conditions: [
+                'when_requested_shipping_service_is_not_60',
+                {
+                    'function': 'when_requested_shipping_service_does_not_contain',
+                    args: [['premium shipping']]
+                }
+            ],
+        };
+
     const serviceMappings = {
         "2x2x2": [
             {
@@ -285,6 +311,7 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            fedexSmartPostParcelSelect,
             dhlSmartMailParcelPlusExpedited,
             dhlSMParcelExpeditedMax,
             {
@@ -394,6 +421,7 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            fedexSmartPostParcelSelect,
             dhlSmartMailParcelPlusExpedited,
             dhlSMParcelExpeditedMax,
             {
@@ -504,6 +532,7 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            fedexSmartPostParcelSelect,
             dhlSmartMailParcelPlusExpedited,
             dhlSMParcelExpeditedMax,
             {
@@ -601,6 +630,7 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            fedexSmartPostParcelSelect,
             dhlSmartMailParcelPlusExpedited,
             dhlSMParcelExpeditedMax,
             {
@@ -722,6 +752,7 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            fedexSmartPostParcelSelect,
             dhlSmartMailParcelPlusExpedited,
             dhlSMParcelExpeditedMax,
             {
