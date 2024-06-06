@@ -70,6 +70,16 @@
 
     $('head').append(styles);
 
+    const commonConditions = [
+        {
+            'function' : 'when_requested_shipping_service_contain',
+            args: [['USPS Priority Mail']],
+            eligible: {
+                services: [13]
+            }
+        },
+    ]
+
     const serviceSelectionPriorities = {
         "FedEx 2Day®___FedEx Express Saver": "FedEx 2Day®",
         "FedEx Express Saver___FedEx 2Day®": "FedEx 2Day®",
@@ -1601,8 +1611,9 @@ ${ship_plus_wip_html}
 
             const serviceMappingWithPrices1 = [...(serviceMappingWithPrices[size] || []), ...serviceMappingWithPrices['***']];
             const services = serviceMappingWithPrices1.filter((service) => {
+                let valid = true;
                 if (service.conditions && service.conditions.length) {
-                    return service.conditions.every((condition) => {
+                    valid = service.conditions.every((condition) => {
                             if (typeof condition === "object" && condition.function && typeof condition.function === "string") {
                                 return conditions[condition.function](data.orderViews[0], ...condition.args)
                             }
@@ -1612,7 +1623,18 @@ ${ship_plus_wip_html}
                     );
                 }
 
-                return true;
+                if(valid){
+                    commonConditions.forEach(commonCondition => {
+                        const conditionFunction = commonCondition.function;
+                        if (valid && typeof conditions[conditionFunction] === "function") {
+                            if(conditions[conditionFunction](data.orderViews[0], ...commonCondition.args)){
+                                valid = commonCondition.eligible.services.includes(service.serviceId)
+                            }
+                        }
+                    })
+                }
+
+                return valid;
             });
 
             if (!services.length) {
