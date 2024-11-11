@@ -85,6 +85,34 @@
         "FedEx Express Saver___FedEx 2Day®": "FedEx 2Day®",
     };
 
+    const commonFields = {
+        BillToParty: null
+    }
+
+    const carrierBasedCustomFields = {
+        1: {
+
+        }
+    }
+
+    const fedexPriorityOvernight = {
+        service: "FedEx Priority Overnight",
+        package: "Package",
+        length: null,
+        width: null,
+        height: null,
+        serviceId:  56,
+        packageId:  3,
+        providerId:  4,
+        carrierId:  4,
+        conditions: [
+            {
+                'function': 'when_requested_shipping_service_contain',
+                args: [['next day delivery']]
+            }
+        ],
+    };
+
     const dhlSmartMailParcelPlusExpedited =
         {
             service: "DHL SmartMail Parcel Plus Expedited",
@@ -102,10 +130,10 @@
                     'function': 'when_requested_shipping_service_does_not_contain',
                     args: [['premium shipping', 'expedited']]
                 },
-                {
+                /*{
                     'function': 'when_weight_between',
                     args: [0, 16]
-                }
+                },*/
             ],
         };
 
@@ -240,6 +268,7 @@
                 carrierId: 4,
                 conditions: ["not_residential", 'when_requested_shipping_service_is_not_60'],
             },
+            dhlSmartMailParcelPlusExpedited,
             {
                 service: "FedEx Standard Overnight®",
                 serviceId: 55,
@@ -250,8 +279,15 @@
                 height: 2,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ['when_requested_shipping_service_is_not_60']
+                conditions: [
+                    'when_requested_shipping_service_is_not_60',
+                    {
+                        'function': 'when_requested_shipping_service_contain',
+                        args: [['next day delivery']]
+                    }
+                ]
             },
+            fedexPriorityOvernight,
             {
                 service: "FedEx Home Delivery®",
                 serviceId: 51,
@@ -396,8 +432,15 @@
                 height: 1,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ['when_requested_shipping_service_is_not_60']
+                conditions: [
+                    'when_requested_shipping_service_is_not_60',
+                    {
+                        'function': 'when_requested_shipping_service_contain',
+                        args: [['next day delivery']]
+                    }
+                ],
             },
+            fedexPriorityOvernight,
         ],
         "12x15x1": [
             {
@@ -483,8 +526,15 @@
                 height: 1,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ['when_requested_shipping_service_is_not_60']
+                conditions: [
+                    'when_requested_shipping_service_is_not_60',
+                    {
+                        'function': 'when_requested_shipping_service_contain',
+                        args: [['next day delivery']]
+                    }
+                ],
             },
+            fedexPriorityOvernight,
             {
                 service: "UPS® Ground (UPS)",
                 serviceId: 26,
@@ -569,8 +619,15 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ['when_requested_shipping_service_is_not_60'],
+                conditions: [
+                    'when_requested_shipping_service_is_not_60',
+                    {
+                        'function': 'when_requested_shipping_service_contain',
+                        args: [['next day delivery']]
+                    }
+                ],
             },
+            fedexPriorityOvernight,
             {
                 service: "FedEx 2Day®",
                 serviceId: 52,
@@ -667,8 +724,15 @@
                 height: 3,
                 providerId: 4,
                 carrierId: 4,
-                conditions: ['when_requested_shipping_service_is_not_60']
+                conditions: [
+                    'when_requested_shipping_service_is_not_60',
+                    {
+                        'function': 'when_requested_shipping_service_contain',
+                        args: [['next day delivery']]
+                    }
+                ],
             },
+            fedexPriorityOvernight,
             {
                 service: "FedEx 2Day®",
                 serviceId: 52,
@@ -789,8 +853,15 @@
                 height: dimensions[2],
                 providerId: 4,
                 carrierId: 4,
-                conditions: ['when_requested_shipping_service_is_not_60'],
+                conditions: [
+                    'when_requested_shipping_service_is_not_60',
+                    {
+                        'function': 'when_requested_shipping_service_contain',
+                        args: [['next day delivery']]
+                    }
+                ],
             },
+            fedexPriorityOvernight,
             {
                 service: "FedEx 2Day®",
                 serviceId: 52,
@@ -922,6 +993,21 @@
 
     serviceMappings['***'] = [
         {
+            service: "DHL Parcel International Direct – DDU",
+            serviceId: 166,
+            package: "Package",
+            packageId: 3,
+            length: null,
+            width: null,
+            height: null,
+            providerId: 6,
+            carrierId: 7,
+            conditions: [{
+                'function': 'when_requested_shipping_service_contain',
+                args: [['International Economy Shipping']]
+            }],
+        },
+        {
             service: "FedEx International Priority",
             serviceId: 60,
             package: "Package",
@@ -947,8 +1033,11 @@
             providerId: 4,
             carrierId: 4,
             conditions: [{
-                'function': 'when_requested_shipping_service_is_in',
-                args: [['FedEx International Economy', 'FedEx International Standard', 'FedEx International Connect Plus']]
+                'function': 'when_requested_shipping_service_contain',
+                args: [[
+                    "International Economy Shipping",
+                    "International Expedited Shipping",
+                ]]
             }],
         },
         {
@@ -962,8 +1051,11 @@
             providerId: 4,
             carrierId: 4,
             conditions: [{
-                'function': 'when_requested_shipping_service_is_in',
-                args: [['FedEx International Economy', 'FedEx International Standard', 'FedEx International Connect Plus']]
+                'function': 'when_requested_shipping_service_contain',
+                args: [[
+                    "International Economy Shipping",
+                    "International Expedited Shipping"
+                ]]
             }],
         },
 
@@ -983,7 +1075,7 @@
                 'when_dimensions_are_not_empty',
                 {
                 'function': 'when_requested_shipping_service_contain',
-                args: [['Standard Shipping - Canada']]
+                args: [['Standard Shipping - Canada', "International Economy Shipping"]]
             }],
         },
         {
@@ -1711,6 +1803,17 @@ ${ship_plus_wip_html}
                     data.orderViews[0].RateError = null;
                     data.orderViews[0].RatingRequestPending = false;
                     data.orderViews[0].UpdatedRate = true;
+
+                    Object.keys(commonFields).forEach(field => {
+                        data.orderViews[0][field] = commonFields[field]
+                    })
+
+                    if(typeof carrierBasedCustomFields[data.orderViews[0].CarrierID] !== "undefined" ){
+                        Object.keys(carrierBasedCustomFields[data.orderViews[0].CarrierID]).forEach(field => {
+                            data.orderViews[0][field] = carrierBasedCustomFields[data.orderViews[0].CarrierID][field]
+                        })
+                    }
+
 
                     let res = cache(data);
 
