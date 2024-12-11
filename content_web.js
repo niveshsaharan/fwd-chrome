@@ -216,6 +216,26 @@
             ],
         };
 
+    const fedexGroundEconomyParcelSelect =
+        {
+            service: "FedEx Ground Economy Parcel Select",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  1925,
+            packageId:  3,
+            providerId:  194,
+            carrierId:  194,
+            conditions: [
+                'when_requested_shipping_service_is_not_60',
+                {
+                    'function': 'when_requested_shipping_service_does_not_contain',
+                    args: [['premium shipping']]
+                }
+            ],
+        };
+
 
     /**
      * Also Nivesh - can we add another carrier/service/package type for the chrome extension?
@@ -347,6 +367,7 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            fedexGroundEconomyParcelSelect,
             fedexSmartPostParcelSelect,
             dhlSmartMailParcelPlusExpedited,
             dhlSMParcelExpeditedMax,
@@ -464,6 +485,7 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            fedexGroundEconomyParcelSelect,
             fedexSmartPostParcelSelect,
             dhlSmartMailParcelPlusExpedited,
             dhlSMParcelExpeditedMax,
@@ -582,6 +604,7 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            fedexGroundEconomyParcelSelect,
             fedexSmartPostParcelSelect,
             dhlSmartMailParcelPlusExpedited,
             dhlSMParcelExpeditedMax,
@@ -687,6 +710,7 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            fedexGroundEconomyParcelSelect,
             fedexSmartPostParcelSelect,
             dhlSmartMailParcelPlusExpedited,
             dhlSMParcelExpeditedMax,
@@ -816,6 +840,7 @@
             },
             uspsGroundAdvantage,
             upsGroundSaver,
+            fedexGroundEconomyParcelSelect,
             fedexSmartPostParcelSelect,
             dhlSmartMailParcelPlusExpedited,
             dhlSMParcelExpeditedMax,
@@ -898,7 +923,19 @@
                 carrierId: 3,
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
-        ];
+        ].map(serviceDetail => {
+            serviceDetail = JSON.parse(JSON.stringify(serviceDetail))
+            serviceDetail['length'] = dimensions[0];
+            serviceDetail['width'] = dimensions[1];
+            serviceDetail['height'] = dimensions[2];
+            if(serviceDetail.serviceId === 8346 && ['20x12x3', '20x12x4', '20x12x6'].includes(serviceDetail['length'] + "x" + serviceDetail['width'] + "x" + serviceDetail['height'])){
+                serviceDetail.conditions.push({
+                    'function': 'when_requested_shipping_service_does_not_contain',
+                    args: [['free', 'standard shipping']]
+                })
+            }
+            return serviceDetail;
+        });
     })
 
     serviceMappings['20x12x4'] = serviceMappings['20x12x4'] || [];
@@ -1004,7 +1041,7 @@
             carrierId: 7,
             conditions: [{
                 'function': 'when_requested_shipping_service_contain',
-                args: [['International Economy Shipping']]
+                args: [['International Economy Shipping', 'Free Standard Shipping - Canada', 'Standard Shipping - Canada']]
             }],
         },
         {
