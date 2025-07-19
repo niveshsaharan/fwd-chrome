@@ -161,6 +161,28 @@
             ],
         };
 
+
+
+    const OnTracGroundService =
+        {
+            service: "OnTrac Ground Service",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId:  124,
+            packageId:  3,
+            providerId:  14,
+            carrierId:  14,
+            conditions: [
+                'when_requested_shipping_service_is_not_60',
+                {
+                    'function': 'when_requested_shipping_service_does_not_contain',
+                    args: [['premium shipping']]
+                }
+            ],
+        };
+
     /**
      * Additionally, I would also like to make another version of the chrome extension identical
      * to the current version (where UPS is included) but would like to include USPS Ground Advantage
@@ -366,6 +388,7 @@
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
             uspsGroundAdvantage,
+            OnTracGroundService,
             upsGroundSaver,
             fedexGroundEconomyParcelSelect,
             fedexSmartPostParcelSelect,
@@ -484,6 +507,7 @@
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
             uspsGroundAdvantage,
+            OnTracGroundService,
             upsGroundSaver,
             fedexGroundEconomyParcelSelect,
             fedexSmartPostParcelSelect,
@@ -603,6 +627,7 @@
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
             uspsGroundAdvantage,
+            OnTracGroundService,
             upsGroundSaver,
             fedexGroundEconomyParcelSelect,
             fedexSmartPostParcelSelect,
@@ -709,6 +734,7 @@
                 conditions: ['when_requested_shipping_service_is_not_60']
             },
             uspsGroundAdvantage,
+            OnTracGroundService,
             upsGroundSaver,
             fedexGroundEconomyParcelSelect,
             fedexSmartPostParcelSelect,
@@ -839,6 +865,7 @@
                 conditions: ['when_requested_shipping_service_is_not_60'],
             },
             uspsGroundAdvantage,
+            OnTracGroundService,
             upsGroundSaver,
             fedexGroundEconomyParcelSelect,
             fedexSmartPostParcelSelect,
