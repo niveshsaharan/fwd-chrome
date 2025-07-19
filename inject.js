@@ -13,4 +13,4 @@ function injectScript(file_path, tag) {
     node.appendChild(script);
 }
 
-injectScript(chrome.extension.getURL('content_web.js'), 'body');
+injectScript(chrome.runtime.getURL('content_web.js'), 'body');

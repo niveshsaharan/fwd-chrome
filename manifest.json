@@ -1,19 +1,20 @@
 {
   "name": "FWD - ShipStation",
-  "version": "0.18.0",
+  "version": "1.1.0",
   "description": "A Chrome extension to select the best available shipping rates!",
+  "manifest_version": 3,
   "permissions": [
     "storage",
     "contentSettings",
     "contextMenus",
     "notifications",
-    "https://*.shipstation.com/*",
-    "declarativeContent",
-    "storage"
+    "declarativeContent"
+  ],
+  "host_permissions": [
+    "https://*.shipstation.com/*"
   ],
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "service_worker": "background.js"
   },
   "icons": {
     "16": "images/get_started16.png",
@@ -21,14 +22,24 @@
     "48": "images/get_started48.png",
     "128": "images/get_started128.png"
   },
-  "manifest_version": 2,
   "content_scripts": [
     {
-      "matches": ["https://ss4.shipstation.com/*"],
-      "js": ["inject.js"]
+      "matches": [
+        "https://ss4.shipstation.com/*"
+      ],
+      "js": [
+        "inject.js"
+      ]
     }
   ],
   "web_accessible_resources": [
-    "content_web.js"
+    {
+      "resources": [
+        "content_web.js"
+      ],
+      "matches": [
+        "https://ss4.shipstation.com/*"
+      ]
+    }
   ]
 }
