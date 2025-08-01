@@ -1068,7 +1068,7 @@
             carrierId: 7,
             conditions: [{
                 'function': 'when_requested_shipping_service_contain',
-                args: [['International Economy Shipping', 'Free Standard Shipping - Canada', 'Standard Shipping - Canada']]
+                args: [['International Economy Shipping', 'Free Standard Shipping - Canada', 'Standard Shipping - Canada', 'Premium Shipping - Canada']]
             }],
         },
         {
