@@ -20,6 +20,12 @@
         commercial: function (data) {
             return data.ResidentialIndicator === "C";
         },
+        international: function (data) {
+            return data.ShipCountryCode !== "US";
+        },
+        domestic: function (data) {
+            return data.ShipCountryCode === "US";
+        },
         not_residential: function (data) {
             return data.ResidentialIndicator !== "R";
         },
@@ -134,6 +140,22 @@
                     'function': 'when_weight_between',
                     args: [0, 16]
                 },*/
+            ],
+        };
+
+    const dhlExpressExpressWorldwide =
+        {
+            service: "DHL Express Express Worldwide",
+            package: "Package",
+            length: null,
+            width: null,
+            height: null,
+            serviceId: 148,
+            packageId:  3,
+            providerId:  13,
+            carrierId:  5,
+            conditions: [
+                'international',
             ],
         };
 
@@ -1246,6 +1268,8 @@
                 args: [['Premium Shipping - Canada']]
             }],
         },
+
+        dhlExpressExpressWorldwide,
     ];
 
     Object.keys(serviceMappings).forEach(size => {
