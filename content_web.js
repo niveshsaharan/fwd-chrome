@@ -13,6 +13,36 @@
 
     const $ = Backbone.$;
 
+    const extensionSettings = {
+        enabled:false,
+        autorun: false,
+    }
+
+    // Function to handle when setting changes
+    function onSettingChanged(settings) {
+        Object.keys(settings).forEach(key => {
+            extensionSettings[key] = settings[key];
+        });
+    }
+
+    // Request initial settings on load
+    window.postMessage({ type: 'GET_SETTINGS' }, '*');
+
+    // Listen for settings messages
+    window.addEventListener('message', function(event) {
+        if (event.source !== window) return;
+
+        // Initial settings response
+        if (event.data.type === 'SETTINGS_RESPONSE') {
+            onSettingChanged(event.data.settings);
+        }
+
+        // Real-time setting change notification
+        if (event.data.type === 'SETTING_CHANGED') {
+            onSettingChanged(event.data.changes);
+        }
+    });
+
     const conditions = {
         residential: function (data) {
             return data.ResidentialIndicator === "R";
@@ -850,10 +880,12 @@
     $(document).on('click', '#orderlist-body tr', function(){
 
         if($('#orderlist-body tr[data-ss-selected="1"]').length <= 1){
-            setTimeout(function(){
-                clickGetQuoteButton();
-            }, 1000);
-            clearCheapestServiceMessaging();
+            if(extensionSettings.autorun){
+                setTimeout(function(){
+                    clickGetQuoteButton();
+                }, 1000);
+            }
+            clearCheapestServiceMessaging(extensionSettings.autorun);
         }
     });
 
@@ -1303,6 +1335,10 @@
      */
     $(document).ajaxSend(function (event, xhr, options) {
 
+        if (window.fwdPaused || ! extensionSettings.enabled) {
+            return;
+        }
+
         if (
             $(".input-group.spinner") != "undefined" &&
             $(".input-group.spinner").find('[type="number"]').length != 0
@@ -1383,10 +1419,15 @@
         }
     }
 
-    function clearCheapestServiceMessaging() {
+    function clearCheapestServiceMessaging(wip = true) {
         $("#cheapest-service").remove();
         $("#cheapest-service-icon").remove();
-        setWip();
+
+        if(wip){
+            setWip();
+        }else{
+            removeWip()
+        }
     }
 
     function isWip(){
@@ -1415,7 +1456,7 @@ ${ship_plus_wip_html}
         console.log("Done Work in progress")
         $('html').removeClass('ss-fwd-wip');
         getContainer().removeClass('ss-wip');
-        $('#ship-plus-wip').remove();
+        document.querySelectorAll('#ship-plus-wip').forEach(node => node.remove());
     }
 
     function clickGetQuoteButton(){
@@ -1432,6 +1473,10 @@ ${ship_plus_wip_html}
      * Capture AajxSuccess
      */
     $(document).ajaxSuccess(function (event, xhr, options, data) {
+        if (window.fwdPaused || ! extensionSettings.enabled) {
+            return;
+        }
+
         // For update rates request
         const $container = getContainer();
 
@@ -1544,7 +1589,10 @@ ${ship_plus_wip_html}
                 );
             }
 
-            if (window.fwdPaused) {
+            if (window.fwdPaused || ! extensionSettings.enabled) {
+                if(! extensionSettings.autorun){
+                    clearCheapestServiceMessaging(extensionSettings.autorun);
+                }
                 return;
             }
 
@@ -1556,7 +1604,11 @@ ${ship_plus_wip_html}
 
         // When hotkeys are pressed
         if (options.url.endsWith("/api/orders/BulkUpdate")) {
-            if (window.fwdPaused) {
+            if (window.fwdPaused || ! extensionSettings.enabled) {
+                if(! extensionSettings.autorun){
+                    clearCheapestServiceMessaging(extensionSettings.autorun);
+                }
+
                 return;
             }
 
@@ -1585,7 +1637,10 @@ ${ship_plus_wip_html}
 
         // When the order modal is opened
         if (options.url.includes("/api/shipments/List?orderID=")) {
-            if (window.fwdPaused) {
+            if (window.fwdPaused || ! extensionSettings.enabled) {
+                if(! extensionSettings.autorun){
+                    clearCheapestServiceMessaging(extensionSettings.autorun);
+                }
                 return;
             }
 

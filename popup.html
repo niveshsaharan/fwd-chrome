@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            width: 250px;
+            padding: 15px;
+            font-family: Arial, sans-serif;
+        }
+        .setting-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .setting-item label {
+            margin-left: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+        input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        input[type="checkbox"]:disabled{
+            cursor: not-allowed;
+        }
+        h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<h3>FWD Shipstation Rate-Shop</h3>
+<div class="setting-item">
+    <input type="checkbox" id="enabledCheckbox">
+    <label for="enabledCheckbox">Enable rate-shipping</label>
+</div>
+<div class="setting-item">
+    <input type="checkbox" id="autorunCheckbox">
+    <label for="autorunCheckbox">Automatic rate-shopping</label>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>
