@@ -23,6 +23,9 @@
         international: function (data) {
             return data.ShipCountryCode !== "US";
         },
+        shipto: function (data, values) {
+            return values.includes(data.ShipCountryCode);
+        },
         domestic: function (data) {
             return data.ShipCountryCode === "US";
         },
@@ -1090,8 +1093,12 @@
             carrierId: 7,
             conditions: [{
                 'function': 'when_requested_shipping_service_contain',
-                args: [['International Economy Shipping', 'Free Standard Shipping - Canada', 'Standard Shipping - Canada', 'Premium Shipping - Canada']]
-            }],
+                args: [['International Economy Shipping', 'Free Standard Shipping - Canada', 'Standard Shipping - Canada', 'Premium Shipping - Canada', 'Standard Shipping', 'Premium Shipping']]
+            },
+                {
+                    'function': 'shipto',
+                    args: [['CA']]
+                }],
         },
         {
             service: "FedEx International Priority",
