@@ -25,6 +25,11 @@
         });
     }
 
+    // Do not check for these stores and show checkmark right away
+    const ineligibleStores = [
+        'Michaels'
+    ]
+
     // Request initial settings on load
     window.postMessage({ type: 'GET_SETTINGS' }, '*');
 
@@ -1620,7 +1625,8 @@ ${ship_plus_wip_html}
                 !height ||
                 (!serviceMappings[length + "x" + width + "x" + height] && !serviceMappings['***'])
             ) {
-                logger("No need to check the rates.");
+                console.log({event, xhr, options, data}, "1")
+                logger("No need to check the rates.",);
                 /*if ($(".modal-body") != "undefined") {
                     $(".modal-body")
                         .find(".col-sm-9.form-control-static")
@@ -1650,6 +1656,7 @@ ${ship_plus_wip_html}
                 !height ||
                 (!serviceMappings[length + "x" + width + "x" + height] && !serviceMappings['***'])
             ) {
+                console.log({event, xhr, options, data}, "2")
                 logger("No need to check the rates.");
                 clearCheapestServiceMessaging();
                 /*if ($(".modal-body") != "undefined") {
@@ -1694,6 +1701,16 @@ ${ship_plus_wip_html}
         }
 
         return null;
+    }
+
+    function showCheckmark($_container){
+        $("#cheapest-service-icon").remove();
+        const checkmarkIcon = `<a id="cheapest-service-icon" style="
+    vertical-align: bottom;
+    margin-left: 5px;
+"> <i class="icon-check text-success" style="font-size: 20px;"></i></a>`;
+
+        $_container.find(".get-quote").after(checkmarkIcon);
     }
 
     /**
@@ -1782,13 +1799,7 @@ ${ship_plus_wip_html}
                         service
                     );
 
-                    $("#cheapest-service-icon").remove();
-                    const checkmarkIcon = `<a id="cheapest-service-icon" style="
-    vertical-align: bottom;
-    margin-left: 5px;
-"> <i class="icon-check text-success" style="font-size: 20px;"></i></a>`;
-
-                    $container.find(".get-quote").after(checkmarkIcon);
+                    showCheckmark($container);
                     $(".rating").find(".processing-icon").remove();
                     $(".col-sm-9.form-control-static").show();
                     removeWip();
@@ -1858,10 +1869,15 @@ ${ship_plus_wip_html}
         const length = data.orderViews[0].Length;
         const width = data.orderViews[0].Width;
         const height = data.orderViews[0].Height;
+        let check = true;
 
         const size = length + "x" + width + "x" + height;
         var exceptionDimentions = ["2x2x2"];
         var exceptionServiceReq = ["2-day delivery", "next day delivery"]; // TODO
+
+        if(ineligibleStores.includes(data?.orderViews?.[0]?.StoreName)){
+            check = false;
+        }
 
         if (typeof serviceMappingWithPrices[size] === "object" || typeof serviceMappingWithPrices['***'] === "object") {
             if (
@@ -1910,10 +1926,16 @@ ${ship_plus_wip_html}
                 return valid;
             });
 
-            if (!services.length) {
+            if (! check || !services.length) {
                 logger("Nothing to check");
                 clearCheapestServiceMessaging();
                 removeWip();
+
+                if(!check){
+                    // Add checkmark
+                    showCheckmark(getContainer());
+                    logger("Checkmark displayed as there is no need to check")
+                }
                 return;
             }
 
