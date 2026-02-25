@@ -247,6 +247,11 @@ FWD.engine = (function ($, config, ui) {
     
 
     async function rateShop(requestData, responseData) {
+
+        const serviceMappingWithPrices = JSON.parse(
+            JSON.stringify(serviceMappings)
+        );
+
         var order = requestData.orderViews[0];
 
         var storeOverride = config.getStoreOverride(order.StoreName, order.RequestedShippingService);
@@ -269,7 +274,7 @@ FWD.engine = (function ($, config, ui) {
         //     return;
         // }
 
-        var allServices = [].concat(serviceMappings[size] || [], serviceMappings['***'] || []);
+        var allServices = [].concat(serviceMappingWithPrices[size] || [], serviceMappingWithPrices['***'] || []);
 
         if (config.EXCEPTION_DIMS.includes(size)) {
             var reqSvc = (order.RequestedShippingService || '').toLowerCase().replace(/"/g, '');

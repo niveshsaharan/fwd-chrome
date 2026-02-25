@@ -37,6 +37,7 @@
         if ($('.input-group.spinner').length && $('.input-group.spinner').find('[type="number"]').length) {
             $('.input-group.spinner').find('[type="number"]').unbind('change').change(function () {
                 if ($('.form-group.shipping-rate').length && !$('.form-group.shipping-rate .processing-icon').length) {
+                    //clickGetQuote()
                     ui.showProcessing();
                 }
             });
@@ -45,6 +46,7 @@
         $(window).unbind('keydown').keydown(function (e) {
             if (e.ctrlKey && e.which >= 48 && e.which <= 57) {
                 if ($('.form-group.shipping-rate').length && !$('.form-group.shipping-rate .processing-icon').length) {
+                   // clickGetQuote()
                     ui.showProcessing();
                 }
             }
@@ -58,7 +60,6 @@
     });
 
     $(document).ajaxSuccess(function (event, xhr, options, data) {
-        console.log("Ajax Success", event, xhr, options, data);
         if (!isActive()) {
             if (!settings.autorun) ui.clearCheapest(false);
             return;
