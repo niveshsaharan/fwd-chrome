@@ -1,106 +1,83 @@
 # Plan
 
-This is a recommended working plan based on the current repository state. It is not a committed product roadmap, but it reflects the most obvious engineering work needed to keep this extension maintainable.
+This is a recommended engineering plan for the current `v2` codebase.
 
-## 1. Split The Monolith
+## 1. Add Automated Tests For Rules And Selection
 
 Priority: high
 
-`content_web.js` currently mixes five concerns in one file:
-
-- service-rule data
-- DOM selectors and UI state
-- ShipStation AJAX interception
-- rate fetching and caching
-- cheapest-service selection logic
+Current risk is concentrated in `src/config.js` and `src/engine.js` with no test coverage.
 
 Recommended next step:
 
-- extract service rules and dimension mappings into a dedicated data module or JSON-like config file
-- extract selection logic into pure functions
-- keep page/DOM glue thin
+- add unit tests for `config.evaluate`, condition primitives, and `buildMappings()` outputs
+- add selection tests for default and expedited branches in `engine`
+- add regression tests for tie-break behavior (`PRIORITY_MAP`)
 
 Expected payoff:
 
-- easier reasoning for humans and AI agents
-- lower risk when adding or removing services
-- realistic path to unit tests
+- safer service/rule changes
+- lower regression risk in rate selection
+- confidence in future refactors
 
-## 2. Add Automated Validation
-
-Priority: high
-
-There are no tests today. The highest-value tests would target:
-
-- candidate filtering by condition functions
-- expedited delivery selection
-- tie-break behavior in `serviceSelectionPriorities`
-- wildcard `***` mapping behavior
-- store exclusion for `Michaels`
-- special-case dimensions like `2x2x2` and `20x12x8`
-- `when_cheapest` package/dimension overrides
-
-Minimum viable test strategy:
-
-- pure unit tests for the rule engine
-- a light smoke test that parses the main script and validates key mappings exist
-
-## 3. Reduce Fragility To ShipStation UI Changes
+## 2. Expand Store-Rule Coverage And Safety
 
 Priority: high
 
-The extension is tightly coupled to:
-
-- `Backbone`
-- ShipStation selectors
-- ShipStation field names
-- ShipStation endpoint paths
+Store-specific override behavior now exists via `STORE_RULES`, but has no dedicated validation path.
 
 Recommended next step:
 
-- centralize selectors and endpoints in one place
-- add clearer logging when selectors are missing
-- fail with an explicit "unsupported page state" path instead of silently doing partial work
+- add tests for exact/contains match behavior in `getStoreOverride`
+- verify override apply flow including `sellerProviderId` bill-to selection
+- define explicit guardrails for adding new store rules (required fields, matching policy, expected outcome)
 
-## 4. Clean Up Packaging And Manifest Debt
+## 3. Harden ShipStation Coupling Points
+
+Priority: high
+
+The extension still depends on brittle selectors and endpoint assumptions.
+
+Recommended next step:
+
+- centralize selectors/endpoints and add structured failure logs
+- add explicit fallback behavior when key selectors are missing
+- reduce duplicated selector access patterns in UI/apply code paths
+
+## 4. Improve Runtime Observability
 
 Priority: medium
 
-Current issues:
-
-- release zip is committed to git
-- zip contains `__MACOSX` entries
-- some manifest permissions appear unused by the current code
+Current UI gives basic progress, but not enough detail when behavior is skipped or overridden.
 
 Recommended next step:
 
-- add a repeatable packaging script
-- keep release artifacts out of the main source tree or generate them on demand
-- remove unused permissions after verifying they are truly unnecessary
+- expose clear skip reasons in debug logs and optional UI hinting
+- log whether path was standard rate-shop vs store override
+- add cheap structured debug toggles for field support without code edits
 
-## 5. Improve Operator Visibility
+## 5. Clean Up Packaging And Release Workflow
 
 Priority: medium
 
-The extension currently shows "working..." and a cheapest result, but it does not explain why it skipped an order or which rule caused the winner.
+Current packaging remains manual and includes extra metadata files.
 
 Recommended next step:
 
-- surface skip reasons in the UI
-- expose the winning rule or candidate list in debug mode
-- make store exclusions and top-level settings more discoverable
+- create repeatable packaging script
+- strip `__MACOSX` entries from zip outputs
+- standardize release artifact naming and update flow
 
-## 6. Keep Documentation As Part Of The Change
+## 6. Keep Docs Updated In Every Behavior Change
 
 Priority: ongoing
 
-Every behavior change should update the relevant docs in the same change:
+When behavior changes, update docs in same change:
 
-- feature/rule changes -> `FEATURES.md`
-- architecture/lifecycle changes -> `HOW_IT_WORKS.md`
-- release-visible changes -> `CHANGELOG.md`
-- plan shifts -> `PLAN.md`
-- agent workflow changes -> `AGENTS.md`
+- feature/rule behavior -> `FEATURES.md`
+- architecture/runtime flow -> `HOW_IT_WORKS.md`
+- version/release-impacting changes -> `CHANGELOG.md`
+- priorities/roadmap shifts -> `PLAN.md`
+- agent process and reading order -> `AGENTS.md`
 
-That rule is important here because most project knowledge is embedded in code comments and commit history rather than in a stable design document.
-
+This remains essential because many business rules are encoded directly in runtime JavaScript rather than external config.

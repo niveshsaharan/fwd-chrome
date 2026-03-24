@@ -1,214 +1,128 @@
 # How It Works
 
-This extension has a small file count but a dense runtime. Almost all meaningful logic lives in `content_web.js`.
+This repository now uses a modular runtime (`v2`) rather than a single injected script.
 
 ## Architecture At A Glance
 
-| File | How it participates at runtime |
+| File | Runtime role |
 | --- | --- |
-| `manifest.json` | Registers permissions, popup, background service worker, content script, and web-accessible injected file |
-| `background.js` | Uses `chrome.declarativeContent` to show the action only on `ss4.shipstation.com` |
-| `popup.html` + `popup.js` | Lets the user toggle `enabled` and `autorun`, persisted in `chrome.storage.sync` |
-| `inject.js` | Injects `content_web.js` into the page and forwards settings to/from the page via `window.postMessage` |
-| `content_web.js` | Hooks ShipStation AJAX traffic, manages WIP UI, builds candidate services, fetches rates, caches responses, and writes the winner back |
+| `manifest.json` | Manifest V3 configuration, popup/background registration, web-accessible resources |
+| `background.js` | Uses `chrome.declarativeContent` to show action only on `ss4.shipstation.com` |
+| `inject.js` | Injects `src/` modules sequentially and bridges `chrome.storage` settings to page scripts |
+| `src/config.js` | Rule primitives, service templates, mapping builders, store-specific overrides |
+| `src/ui.js` | ShipStation UI helpers (WIP state, spinner, cheapest banner, checkmark, selectors) |
+| `src/engine.js` | Rate-shop engine (filtering, fetch/cache, selection, apply flow) |
+| `src/main.js` | Orchestrates settings sync, click handlers, and AJAX hooks |
+| `popup.html` + `popup.js` | Reads/writes `enabled` and `autorun` in `chrome.storage.sync` |
 
 ## Why `inject.js` Exists
 
-Chrome content scripts do not share the page's JavaScript scope. ShipStation exposes `Backbone` on the page, and `content_web.js` depends on `Backbone.$`. Because of that, the extension cannot do the real work directly from the isolated content-script context.
+Content scripts run in an isolated world, but this extension needs ShipStation page globals (`Backbone`, ShipStation DOM/runtime context). `inject.js` injects runtime modules into page context to execute there.
 
-The solution used here is:
+`injectAll()` loads modules in strict order and awaits script `onload` for each step:
 
-1. `inject.js` runs as the content script.
-2. It injects `<script src="content_web.js">` into the actual ShipStation page.
-3. It becomes a bridge for settings:
-   - page asks for settings with `GET_SETTINGS`
-   - `inject.js` reads `chrome.storage.sync`
-   - `inject.js` posts `SETTINGS_RESPONSE`
-   - later storage changes are forwarded as `SETTING_CHANGED`
+1. `src/config.js`
+2. `src/ui.js`
+3. `src/engine.js`
+4. `src/main.js`
 
-## End-To-End Runtime Flow
+This guarantees dependencies are available before later modules execute.
 
-1. Chrome loads the extension on ShipStation.
-2. `background.js` ensures the action icon is available only on matching pages.
-3. `inject.js` injects `content_web.js`.
-4. `content_web.js` verifies `Backbone` exists.
-5. `content_web.js` asks for the current extension settings.
-6. The user opens an order, changes an order, or ShipStation fires one of the watched AJAX requests.
-7. The extension enters WIP mode:
-   - adds `ss-fwd-wip` to `<html>`
-   - disables some interactions
-   - shows a "Shipping+" working row
-   - shows a spinner
-8. The extension determines the current order container:
-   - modal order detail if present
-   - otherwise the order drawer
-9. The extension reads the current dimensions and order data.
-10. It decides whether there is any applicable mapping.
-11. If yes, it builds a candidate service list, fetches or reuses rates, selects a winner, and writes the result back into the form.
-12. It removes WIP state and shows either the cheapest-rate row or a simple success checkmark.
+## Cross-Context Settings Contract
 
-## Network Hooks And Their Meaning
+`inject.js` provides a message bridge between page scripts and extension storage:
 
-The runtime relies heavily on ShipStation's own AJAX lifecycle.
+- Page -> bridge:
+  - `GET_SETTINGS`
+- Bridge -> page:
+  - `SETTINGS_RESPONSE`
+  - `SETTING_CHANGED`
 
-### `ajaxSend`
+Runtime settings object in `src/main.js` is updated from these messages and controls whether rate-shopping logic runs.
 
-- Watches outgoing requests globally.
-- If the request is `/api/orders/updaterates`:
-  - shows processing UI
-  - flips `lowPriority` to `false`
+## Public Runtime Interfaces
 
-This means the extension upgrades some rate-refresh requests to higher-priority rating calls before ShipStation sends them.
+Modules publish into `window.FWD`:
 
-### `ajaxSuccess`
+- `window.FWD.config`
+  - condition evaluators, common filters, mapping builders, store rules
+- `window.FWD.ui`
+  - DOM helpers and visual state helpers
+- `window.FWD.engine`
+  - `rateShop`, `hasMappingForSize`, `logger`
 
-The extension reacts to several successful ShipStation requests:
+`src/main.js` consumes these interfaces and wires page events.
 
-- `/api/shipments/costsummary`
-  - if the quick-ship height is blank, the script fills in `0` and triggers change
-- `/api/orders/updaterates`
-  - logs the response
-  - clears previous UI state
-  - starts candidate-rate collection and comparison
-- `/api/orders/BulkUpdate`
-  - if dimensions match known mappings, it clicks "Get quote"
-- `/api/shipments/List?orderID=...`
-  - when an order detail view opens, it may click "Get quote"
+## Event And Network Hooks
 
-Separately, clicking an order row in the order list can also trigger auto-run behavior.
+`src/main.js` binds:
 
-## Service Rule Data Model
+- Row-click handler on `#orderlist-body tr`
+  - triggers auto-quote flow when `autorun` is enabled.
+- `ajaxSend`
+  - shows processing UI and forces `lowPriority=false` for `/api/orders/updaterates`.
+- `ajaxSuccess`
+  - handles:
+    - `/api/shipments/costsummary`
+    - `/api/orders/updaterates`
+    - `/api/orders/BulkUpdate`
+    - `/api/shipments/List?orderID=...`
 
-Each candidate service entry is a plain object with fields like:
+## Engine Flow (`engine.rateShop`)
 
-- `service`
-- `serviceId`
-- `package`
-- `packageId`
-- `providerId`
-- `carrierId`
-- `length`
-- `width`
-- `height`
-- `conditions`
-- optional `when_cheapest`
+1. Clone base mappings for each call (`2.0.1` fix) so per-request mutations do not leak across requests.
+2. Read active order from `requestData.orderViews[0]`.
+3. Check `STORE_RULES` override using store name + requested shipping service.
+4. If override matches, skip normal rate comparison and directly apply configured service.
+5. Otherwise, build candidate list from size mapping + wildcard `***` mapping.
+6. Apply exception-dimension gate (`2x2x2` only for configured expedited requested services).
+7. Filter services by per-service conditions and `COMMON_CONDITIONS`.
+8. Fetch rates (with cache lookup first) using ShipStation `/api/orders/updaterates`.
+9. Parse prices/delivery timing and select winner.
+10. Render cheapest banner and apply service/package in UI.
 
-The rule table is stored in `serviceMappings`.
+## Store Override Short-Circuit
 
-### Important supporting structures
+`src/config.js` currently defines `STORE_RULES` for `Michaels` with exact matches:
 
-- `conditions`
-  - named predicate functions used by service rules
-- `commonConditions`
-  - global filters applied after per-service conditions
-- `serviceSelectionPriorities`
-  - tie-break overrides when prices match
-- `commonFields`
-  - fields always copied into outbound rate requests
-- `carrierBasedCustomFields`
-  - placeholder map for carrier-specific request fields
-- `ineligibleStores`
-  - current hard-coded store exclusions
+- `ups ground`
+- `ups ground saver`
 
-## Candidate Filtering
+For these matches the engine bypasses normal rate-shopping and applies predefined service objects. The apply flow also supports bill-to account switching using `sellerProviderId` in override service data.
 
-When `getShippingRatesForServices()` runs, it:
+## Caching And Selection
 
-1. clones `serviceMappings`
-2. builds the current size key from `Length x Width x Height`
-3. checks store exclusions
-4. handles the `2x2x2` expedited-only exception
-5. combines size-specific mappings with wildcard `***` mappings
-6. filters services by all attached conditions
-7. applies `commonConditions`
+Cache key is based on:
 
-If nothing remains, the extension stops and usually shows a checkmark.
+- `OrderID`
+- `ServiceID`
+- `RequestedPackageTypeID`
+- `ProviderID`
+- `CarrierID`
+- `Length`
+- `Width`
+- `Height`
 
-## How Rates Are Fetched
+Selection paths:
 
-For each remaining candidate service:
-
-- The script mutates the current `orderViews[0]` request object with that service's IDs and dimensions.
-- It resets rate-related fields like `Rate`, `RateError`, and `RatingRequestPending`.
-- It applies `commonFields` and any carrier-specific custom fields.
-- It looks for a cached response first.
-- If no cache hit exists, it sends a `fetch()` POST to:
-  - `https://ss4.shipstation.com/api/orders/updaterates`
-- It stores the response in an in-memory cache object.
-
-## Cache Key
-
-The cache key uses:
-
-- order ID
-- service ID
-- package ID
-- provider ID
-- carrier ID
-- length
-- width
-- height
-
-This avoids reusing the wrong result when the order or package context changes.
-
-## How The Winner Is Chosen
-
-`handleServiceRates()` has two main branches:
-
-- Expedited branch:
-  - triggered when any candidate's requested-service text contains `2-day delivery` or `next day delivery`
-  - calculates delivery-day values from ShipStation's `DeliveryTime`
-  - subtracts weekend days
-  - prefers services that still satisfy the promised delivery speed
-- Default branch:
-  - keeps only services with a positive price
-  - chooses the lowest price
-  - uses `serviceSelectionPriorities` for certain equal-price cases
-
-## How The Winner Is Applied
-
-`setCheapestServiceAsSelected()`:
-
-- verifies the user is still viewing the same order
-- sets `ServiceID` if needed
-- sets `RequestedPackageTypeID` if needed
-- applies any `when_cheapest` override
-- may update dimensions when a flat/envelope conversion is part of the winning rule
-- shows a checkmark and clears WIP UI when done
+- Expedited (`2-day delivery` / `next day delivery`): compares qualifying FedEx services with computed delivery-day values.
+- Default path: chooses lowest positive price, then uses `PRIORITY_MAP` for tie handling.
 
 ## UI State Management
 
-The code uses a simple WIP model:
+`src/ui.js` controls UI states:
 
-- `setWip()`
-  - adds HTML/CSS state classes
-  - shows the "Shipping+" row
-- `removeWip()`
-  - removes those classes and row
-- `clearCheapestServiceMessaging()`
-  - removes previous cheapest-rate messages and optionally toggles WIP state
+- `setWip` / `removeWip`
+- `showProcessing` / `hideProcessing`
+- `clearCheapest`
+- `showCheapestBanner`
+- `showCheckmark`
 
-## External Dependencies And Coupling
+WIP state adds CSS classes to lock interaction and display working status while rates are being processed.
 
-- Hard dependency on page-global `Backbone`
-- Heavy reliance on ShipStation selectors such as:
-  - `.modal.order-detail`
-  - `#order-drawer`
-  - `.get-quote`
-  - specific form field names like `ServiceID`, `RequestedPackageTypeID`, `LengthIn`, `WidthIn`, `HeightIn`
-- Hard-coded ShipStation domain:
-  - `ss4.shipstation.com`
+## Current Technical Debt
 
-## Known Technical Debt
-
-- `content_web.js` is a single large script with mixed concerns:
-  - config
-  - UI
-  - request mutation
-  - rate selection
-  - logging
-- There are no unit tests around rules or tie-break logic.
-- Manifest permissions include entries not used by the current code.
-- Packaging is manual and release artifacts are stored in git.
-- `window.fwdPaused` is referenced but not implemented inside the repo.
-
+- No automated tests for config rules or selection behavior.
+- Strong coupling to ShipStation selectors and endpoint behavior.
+- `window.fwdPaused` is referenced but not defined in-repo.
+- Packaging remains manual and release zip includes `__MACOSX` artifacts.
