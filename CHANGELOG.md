@@ -9,6 +9,14 @@ Two notes:
 
 ## Current Release Line
 
+### 2.0.2 - 2026-03-24
+
+- Added `Amazon Shipping Ground (On and Off Amazon)` to domestic size-based mappings in `src/config.js`.
+- Configured Amazon Shipping US IDs as `serviceId=6747`, `providerId=81`, `carrierId=80`, with package type `Package` (`packageId=3`).
+- Restricted Amazon Shipping US to non-expedited requested-service text by excluding `premium shipping`, `expedited`, `2-day`, `2 day`, `next day`, `next-day`, and `overnight`.
+- Added explicit domestic guard (`ShipCountryCode === 'US'`) for Amazon Shipping US candidate eligibility.
+- Bumped manifest version to `2.0.2`.
+
 ### 2.0.1 - 2026-02-25
 
 - Fixed `rateShop` mapping-mutation bug by cloning `serviceMappings` per request before filtering and mutation.

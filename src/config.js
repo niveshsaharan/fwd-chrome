@@ -35,12 +35,14 @@ window.FWD.config = (function () {
         return true;
     }
 
-    var NOT60       = 'not_service_60';
-    var NO_PREM     = cond('service_lacks', ['premium shipping']);
-    var NO_PREM_EXP = cond('service_lacks', ['premium shipping', 'expedited']);
-    var NEXT_DAY    = cond('service_has', ['next day delivery']);
-    var RES         = 'residential';
-    var NOT_RES     = 'not_residential';
+    var NOT60                 = 'not_service_60';
+    var NO_PREM               = cond('service_lacks', ['premium shipping']);
+    var NO_PREM_EXP           = cond('service_lacks', ['premium shipping', 'expedited']);
+    var NO_AMAZON_EXPEDITED   = cond('service_lacks', ['premium shipping', 'expedited', '2-day', '2 day', 'next day', 'next-day', 'overnight']);
+    var NEXT_DAY              = cond('service_has', ['next day delivery']);
+    var RES                   = 'residential';
+    var NOT_RES               = 'not_residential';
+    var DOMESTIC              = 'domestic';
 
     var PKG_NAMES = {
         3: 'Package', 1: 'Large Envelope or Flat',
@@ -52,6 +54,7 @@ window.FWD.config = (function () {
         uspsGround:        { service: 'USPS Ground Advantage',               serviceId: 3512,  packageId: 3,   providerId: 2,   carrierId: 1,   conditions: [NOT60, NO_PREM] },
         ontrac:            { service: 'OnTrac Ground Service',               serviceId: 124,   packageId: 3,   providerId: 14,  carrierId: 14,  conditions: [NOT60, NO_PREM] },
         upsGroundSaver:    { service: 'UPS Ground Saver',                    serviceId: 10391, packageId: 3,   providerId: 103, carrierId: 3,   conditions: [NOT60, NO_PREM] },
+        amazonShippingUs:  { service: 'Amazon Shipping US',                  serviceId: 6747,  packageId: 3,   providerId: 81,  carrierId: 80,  conditions: [DOMESTIC, NOT60, NO_AMAZON_EXPEDITED] },
         fedexGroundEcon:   { service: 'FedEx Ground Economy Parcel Select',  serviceId: 1925,  packageId: 3,   providerId: 194, carrierId: 194, conditions: [NOT60, NO_PREM] },
         fedexSmartPost:    { service: 'FedEx SmartPost Parcel Select',       serviceId: 66,    packageId: 3,   providerId: 4,   carrierId: 4,   conditions: [NOT60, NO_PREM] },
         dhlSmartMail:      { service: 'DHL SmartMail Parcel Plus Expedited', serviceId: 74,    packageId: 3,   providerId: 6,   carrierId: 7,   conditions: [NOT60, NO_PREM_EXP] },
@@ -133,7 +136,7 @@ window.FWD.config = (function () {
         if (WHEN_CHEAPEST[key]) pm.when_cheapest = JSON.parse(JSON.stringify(WHEN_CHEAPEST[key]));
         list.push(pm);
 
-        list.push(svc('uspsGround'), svc('ontrac'), svc('upsGroundSaver'));
+        list.push(svc('uspsGround'), svc('ontrac'), svc('upsGroundSaver'), svc('amazonShippingUs'));
         list.push(svc('fedexGroundEcon'), svc('fedexSmartPost'));
         list.push(svc('dhlSmartMail'), svc('dhlSmMax'));
 
