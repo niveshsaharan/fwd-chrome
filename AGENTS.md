@@ -57,6 +57,15 @@ Use this mapping:
 
 Do not merge code changes with stale docs.
 
+## Versioning Rule
+
+- For release-visible behavior/runtime changes, bump `manifest.json` `version` in the same change.
+- If the current working `manifest.json` version matches `HEAD`, increment the patch version (`x.y.z` -> `x.y.(z+1)`).
+- Keep `CHANGELOG.md` aligned with that version and use an absolute date.
+- For each release entry in `CHANGELOG.md`, add or update a single line directly under the version header in this format:
+  - `Commit message headline: \`<short headline>\``
+- Use that headline as the git commit message subject for the change whenever possible.
+
 ## Documentation Standards
 
 - Be specific and source-backed.
@@ -74,6 +83,8 @@ Before finishing:
 - do docs describe actual current behavior, not intended behavior?
 - did I document new/changed conditions, mappings, or store overrides?
 - did I update changelog for release-visible changes?
+- does the updated changelog entry include an up-to-date `Commit message headline` line?
+- did I bump `manifest.json` version when behavior/runtime changed?
 - did I preserve useful historical context while keeping v2 as current state?
 
 ## Preferred Extension Approach

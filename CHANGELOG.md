@@ -9,9 +9,18 @@ Two notes:
 
 ## Current Release Line
 
+### 2.0.3 - 2026-03-25
+
+Commit message headline: `2.0.3: fix duplicate updaterates response processing and ignore zip artifacts`
+
+- Fixed duplicate service response logging for the currently-selected rate by processing the initial `/api/orders/updaterates` response once per `rateShop` run instead of once per service iteration.
+- Updated Amazon service label in runtime mappings to `Amazon Shipping Ground(On and Off Amazon)` to match current ShipStation naming used in logs/UI.
+- Added `.gitignore` rule for generated `fwd-chrome-*.zip` artifacts.
+- Bumped manifest version to `2.0.3`.
+
 ### 2.0.2 - 2026-03-24
 
-- Added `Amazon Shipping Ground (On and Off Amazon)` to domestic size-based mappings in `src/config.js`.
+- Added Amazon Shipping US carrier mapping (IDs `6747/81/80`) to domestic size-based mappings in `src/config.js`.
 - Configured Amazon Shipping US IDs as `serviceId=6747`, `providerId=81`, `carrierId=80`, with package type `Package` (`packageId=3`).
 - Restricted Amazon Shipping US to non-expedited requested-service text by excluding `premium shipping`, `expedited`, `2-day`, `2 day`, `next day`, `next-day`, and `overnight`.
 - Added explicit domestic guard (`ShipCountryCode === 'US'`) for Amazon Shipping US candidate eligibility.

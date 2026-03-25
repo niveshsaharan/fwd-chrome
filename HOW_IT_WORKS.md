@@ -77,7 +77,7 @@ Modules publish into `window.FWD`:
 5. Otherwise, build candidate list from size mapping + wildcard `***` mapping.
 6. Apply exception-dimension gate (`2x2x2` only for configured expedited requested services).
 7. Filter services by per-service conditions and `COMMON_CONDITIONS`.
-8. Fetch rates (with cache lookup first) using ShipStation `/api/orders/updaterates`.
+8. Seed service prices from the triggering `/api/orders/updaterates` response once (when present), then fetch any remaining services (with cache lookup first) using ShipStation `/api/orders/updaterates`.
 9. Parse prices/delivery timing and select winner.
 10. Render cheapest banner and apply service/package in UI.
 

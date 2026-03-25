@@ -31,7 +31,7 @@ This file describes the extension's current behavior as implemented in the `v2` 
 - Fetches rates, caches responses, and selects a winner.
 - Applies selected service/package to the active order form.
 - Shows in-page status (`working...`, spinner, cheapest banner, checkmark).
-- Includes `Amazon Shipping Ground (On and Off Amazon)` in domestic non-expedited candidate sets.
+- Includes `Amazon Shipping Ground(On and Off Amazon)` in domestic non-expedited candidate sets.
 
 ## Rule Primitives
 
@@ -62,7 +62,7 @@ Additional global rule controls:
 
 ## Requested-Service Keyword Guards
 
-- `Amazon Shipping Ground (On and Off Amazon)` is only eligible when all of these are true:
+- `Amazon Shipping Ground(On and Off Amazon)` is only eligible when all of these are true:
   - destination is domestic (`ShipCountryCode === 'US'`)
   - requested shipping service ID is not `60`
   - requested service text does not contain:
@@ -74,7 +74,7 @@ Additional global rule controls:
     - `next-day`
     - `overnight`
 - This keeps Amazon Shipping US available for non-expedited requests such as `flat rate shipping`, `free shipping`, and other standard ground-style text.
-- This rule targets `Amazon Shipping Ground (On and Off Amazon)` only, and is distinct from `Amazon Buy Shipping`.
+- This rule targets `Amazon Shipping Ground(On and Off Amazon)` only, and is distinct from `Amazon Buy Shipping`.
 
 ## Store-Specific Overrides
 
@@ -125,7 +125,7 @@ Referenced service names:
 - DHL Parcel International Direct - DDU
 - DHL SM Parcel Expedited Max
 - DHL SmartMail Parcel Plus Expedited
-- Amazon Shipping Ground (On and Off Amazon)
+- Amazon Shipping Ground(On and Off Amazon)
 - FedEx 2Day
 - FedEx Express Saver
 - FedEx Ground Economy Parcel Select

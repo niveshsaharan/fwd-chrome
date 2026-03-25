@@ -297,12 +297,13 @@ FWD.engine = (function ($, config, ui) {
 
         logger('Rate shopping ' + services.length + ' services...');
 
+        if (responseData && responseData.final && responseData.success && responseData.orders && responseData.orders.length) {
+            cacheSet(requestData, responseData);
+            setRateFromResponse(responseData, services);
+        }
+
         for (var i = 0; i < services.length; i++) {
             var svc = services[i];
-            if (responseData && responseData.final && responseData.success && responseData.orders && responseData.orders.length) {
-                cacheSet(requestData, responseData);
-                setRateFromResponse(responseData, services);
-            }
             if (typeof svc.order === 'undefined') {
                 var res = await fetchRate(requestData, svc);
                 setRateFromResponse(res, services);
