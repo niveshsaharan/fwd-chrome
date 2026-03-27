@@ -20,6 +20,14 @@ window.FWD.config = (function () {
             var s = (d.RequestedShippingService || '').toLowerCase();
             return !v.some(function (x) { return s.includes(String(x).toLowerCase()); });
         },
+        store_has:      function (d, v) {
+            var s = (d.StoreName || '').toLowerCase();
+            return v.some(function (x) { return s.includes(String(x).toLowerCase()); });
+        },
+        store_lacks:    function (d, v) {
+            var s = (d.StoreName || '').toLowerCase();
+            return !v.some(function (x) { return s.includes(String(x).toLowerCase()); });
+        },
         weight_oz_between: function (d, min, max) {
             return d.Weight >= min && d.Weight <= max && d.WeightUnitOfMeasure === 'Ounce';
         },
@@ -43,6 +51,7 @@ window.FWD.config = (function () {
     var RES                   = 'residential';
     var NOT_RES               = 'not_residential';
     var DOMESTIC              = 'domestic';
+    var NOT_WALMART_STORE     = cond('store_lacks', ['walmart']);
 
     var PKG_NAMES = {
         3: 'Package', 1: 'Large Envelope or Flat',
@@ -54,7 +63,7 @@ window.FWD.config = (function () {
         uspsGround:        { service: 'USPS Ground Advantage',               serviceId: 3512,  packageId: 3,   providerId: 2,   carrierId: 1,   conditions: [NOT60, NO_PREM] },
         ontrac:            { service: 'OnTrac Ground Service',               serviceId: 124,   packageId: 3,   providerId: 14,  carrierId: 14,  conditions: [NOT60, NO_PREM] },
         upsGroundSaver:    { service: 'UPS Ground Saver',                    serviceId: 10391, packageId: 3,   providerId: 103, carrierId: 3,   conditions: [NOT60, NO_PREM] },
-        amazonShippingUs:  { service: 'Amazon Shipping Ground(On and Off Amazon)',                  serviceId: 6747,  packageId: 3,   providerId: 81,  carrierId: 80,  conditions: [DOMESTIC, NOT60, NO_AMAZON_EXPEDITED] },
+        amazonShippingUs:  { service: 'Amazon Shipping Ground(On and Off Amazon)',                  serviceId: 6747,  packageId: 3,   providerId: 81,  carrierId: 80,  conditions: [DOMESTIC, NOT60, NO_AMAZON_EXPEDITED, NOT_WALMART_STORE] },
         fedexGroundEcon:   { service: 'FedEx Ground Economy Parcel Select',  serviceId: 1925,  packageId: 3,   providerId: 194, carrierId: 194, conditions: [NOT60, NO_PREM] },
         fedexSmartPost:    { service: 'FedEx SmartPost Parcel Select',       serviceId: 66,    packageId: 3,   providerId: 4,   carrierId: 4,   conditions: [NOT60, NO_PREM] },
         dhlSmartMail:      { service: 'DHL SmartMail Parcel Plus Expedited', serviceId: 74,    packageId: 3,   providerId: 6,   carrierId: 7,   conditions: [NOT60, NO_PREM_EXP] },

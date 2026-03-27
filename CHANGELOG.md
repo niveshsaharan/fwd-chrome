@@ -9,6 +9,14 @@ Two notes:
 
 ## Current Release Line
 
+### 2.0.4 - 2026-03-27
+
+Commit message headline: `2.0.4: exclude Amazon Shipping US for Walmart store orders`
+
+- Excluded `Amazon Shipping Ground(On and Off Amazon)` when `StoreName` contains `walmart` (case-insensitive).
+- Added `store_has` / `store_lacks` condition helpers in `src/config.js` for store-name based filtering.
+- Bumped manifest version to `2.0.4`.
+
 ### 2.0.3 - 2026-03-25
 
 Commit message headline: `2.0.3: fix duplicate updaterates response processing and ignore zip artifacts`

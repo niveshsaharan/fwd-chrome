@@ -49,6 +49,8 @@ This file describes the extension's current behavior as implemented in the `v2` 
 - `service_in`
 - `service_has`
 - `service_lacks`
+- `store_has`
+- `store_lacks`
 - `weight_oz_between`
 
 Additional global rule controls:
@@ -64,6 +66,7 @@ Additional global rule controls:
 
 - `Amazon Shipping Ground(On and Off Amazon)` is only eligible when all of these are true:
   - destination is domestic (`ShipCountryCode === 'US'`)
+  - store name does not contain `walmart` (case-insensitive)
   - requested shipping service ID is not `60`
   - requested service text does not contain:
     - `premium shipping`
