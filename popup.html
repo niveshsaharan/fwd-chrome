@@ -4,9 +4,21 @@
     <meta charset="UTF-8">
     <style>
         body {
-            width: 250px;
+            width: 320px;
             padding: 15px;
             font-family: Arial, sans-serif;
+        }
+        .settings-section {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #e3e3e3;
+        }
+        .settings-section h4 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
         .setting-item {
             display: flex;
@@ -27,6 +39,29 @@
         input[type="checkbox"]:disabled{
             cursor: not-allowed;
         }
+        .services-list {
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .carrier-group + .carrier-group {
+            margin-top: 14px;
+        }
+        .carrier-title {
+            margin: 0 0 6px 0;
+            font-size: 13px;
+            color: #222;
+        }
+        .service-setting {
+            margin: 6px 0;
+        }
+        .service-setting label {
+            font-size: 13px;
+            line-height: 1.25;
+        }
+        .services-list.is-disabled {
+            opacity: 0.65;
+        }
         h3 {
             margin: 0 0 15px 0;
             font-size: 16px;
@@ -44,6 +79,11 @@
     <input type="checkbox" id="autorunCheckbox">
     <label for="autorunCheckbox">Automatic rate-shopping</label>
 </div>
+<div class="settings-section">
+    <h4>Services</h4>
+    <div id="serviceGroups" class="services-list"></div>
+</div>
+<script src="src/serviceCatalog.js"></script>
 <script src="popup.js"></script>
 </body>
 </html>

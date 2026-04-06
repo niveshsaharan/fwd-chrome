@@ -15,25 +15,29 @@ Before non-trivial changes, read docs in order:
 Then read code in order:
 
 1. `manifest.json`
-2. `inject.js`
-3. `src/config.js`
-4. `src/ui.js`
-5. `src/engine.js`
-6. `src/main.js`
-7. `popup.js`
-8. `background.js`
+2. `src/serviceCatalog.js`
+3. `inject.js`
+4. `src/config.js`
+5. `src/ui.js`
+6. `src/engine.js`
+7. `src/main.js`
+8. `popup.js`
+9. `background.js`
 
 ## Codebase Facts You Should Assume
 
 - There is no build step; checked-in JavaScript is runtime code.
 - Highest-risk logic lives in:
+  - `src/serviceCatalog.js` (toggle IDs, carrier grouping, default-enabled normalization)
   - `src/config.js` (rule definitions, mappings, store overrides)
   - `src/engine.js` (rate-shop execution and selection)
-- Runtime interfaces are exposed via `window.FWD.config`, `window.FWD.ui`, and `window.FWD.engine`.
+- `src/serviceCatalog.js` is the shared source of truth for popup-visible service variants.
+- Runtime interfaces are exposed via `window.FWD.serviceCatalog`, `window.FWD.config`, `window.FWD.ui`, and `window.FWD.engine`.
 - Content script still targets `ss4.shipstation.com`.
 - Settings live in `chrome.storage.sync` keys:
   - `enabled`
   - `autorun`
+  - `enabledServices`
 - `window.fwdPaused` is referenced but not set in this repository.
 
 ## Mandatory Documentation Updates
@@ -91,6 +95,7 @@ Before finishing:
 
 When adding shipping logic:
 
+- add or update the matching entry in `src/serviceCatalog.js`
 - prefer template-based additions in `src/config.js`
 - keep IDs and conditions explicit and reviewable
 - add/adjust tests for changed rule paths

@@ -1,5 +1,5 @@
 window.FWD = window.FWD || {};
-FWD.engine = (function ($, config, ui) {
+FWD.engine = (function ($, config, ui, serviceCatalog) {
 
     var serviceMappings = config.buildMappings();
     var cacheStore = {};
@@ -30,8 +30,12 @@ FWD.engine = (function ($, config, ui) {
         return cacheStore[makeCacheKey(request.orderViews[0])];
     }
 
-    function filterServices(allServices, orderData) {
+    function filterServices(allServices, orderData, enabledServices) {
         return allServices.filter(function (service) {
+            if (!serviceCatalog.isServiceEnabled(service.toggleId, enabledServices)) {
+                return false;
+            }
+
             var valid = true;
             if (service.conditions && service.conditions.length) {
                 valid = service.conditions.every(function (c) { return config.evaluate(c, orderData); });
@@ -246,7 +250,7 @@ FWD.engine = (function ($, config, ui) {
     }
     
 
-    async function rateShop(requestData, responseData) {
+    async function rateShop(requestData, responseData, enabledServices) {
 
         const serviceMappingWithPrices = JSON.parse(
             JSON.stringify(serviceMappings)
@@ -257,11 +261,18 @@ FWD.engine = (function ($, config, ui) {
         var storeOverride = config.getStoreOverride(order.StoreName, order.RequestedShippingService);
 
         if (storeOverride) {
-            // Skip rate shopping — directly apply the override service
-            var overrideService = storeOverride[0];
-            ui.clearCheapest(true);
-            applySelection(requestData, {...overrideService,order});
-            return;
+            var enabledOverrideServices = storeOverride.filter(function (service) {
+                return serviceCatalog.isServiceEnabled(service.toggleId, enabledServices);
+            });
+
+            if (enabledOverrideServices.length) {
+                var overrideService = enabledOverrideServices[0];
+                ui.clearCheapest(true);
+                applySelection(requestData, Object.assign({}, overrideService, { order: order }));
+                return;
+            }
+
+            logger('Store override skipped — all override services are disabled.');
         }
 
         var size = order.Length + 'x' + order.Width + 'x' + order.Height;
@@ -285,7 +296,7 @@ FWD.engine = (function ($, config, ui) {
             }
         }
 
-        var services = filterServices(allServices, order);
+        var services = filterServices(allServices, order, enabledServices);
 
         if (!services.length) {
             logger('No services to check');
@@ -317,13 +328,18 @@ FWD.engine = (function ($, config, ui) {
             ui.showCheapestBanner(ui.getContainer(), cheapest);
             applySelection(requestData, cheapest);
         } else {
-            ui.removeWip();
+            ui.clearCheapest(false);
+            ui.hideProcessing();
             console.error('Rate shop failed — no valid cheapest.', services, cheapest);
         }
     }
 
-    function hasMappingForSize(l, w, h) {
-        return !!(serviceMappings[l + 'x' + w + 'x' + h] || serviceMappings['***']);
+    function hasMappingForSize(l, w, h, enabledServices) {
+        var services = [].concat(serviceMappings[l + 'x' + w + 'x' + h] || [], serviceMappings['***'] || []);
+
+        return services.some(function (service) {
+            return serviceCatalog.isServiceEnabled(service.toggleId, enabledServices);
+        });
     }
 
     return {
@@ -332,4 +348,4 @@ FWD.engine = (function ($, config, ui) {
         logger:             logger,
     };
 
-})(Backbone.$, FWD.config, FWD.ui);
+})(Backbone.$, FWD.config, FWD.ui, FWD.serviceCatalog);

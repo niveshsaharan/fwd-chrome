@@ -11,12 +11,21 @@ This file describes the extension's current behavior as implemented in the `v2` 
   - Stored in `chrome.storage.sync` as `autorun`.
   - Disabled in popup when `enabled` is off.
   - When on, selecting/opening an order triggers a delayed `Get Quote` click.
+- `Services`
+  - Stored in `chrome.storage.sync` as `enabledServices`.
+  - Rendered in the popup under carrier headings sorted alphabetically by carrier name.
+  - Within each carrier, services are sorted alphabetically by the visible label.
+  - Missing `enabledServices` entries default to `true`, so new or previously-unsaved services start enabled.
+  - Disabled in popup when `enabled` is off, but saved service states are preserved.
+  - Disabled services are excluded from normal rate-shopping and from store-specific override application.
+  - Popup labels add `(<package name>)` only when a carrier has multiple variants with the same service name.
 
 ## Where The Extension Runs
 
 - Chrome action is shown only on `ss4.shipstation.com`.
 - Content script runs on `https://ss4.shipstation.com/*`.
 - Runtime modules injected into page context by `inject.js`:
+  - `src/serviceCatalog.js`
   - `src/config.js`
   - `src/ui.js`
   - `src/engine.js`
@@ -27,11 +36,12 @@ This file describes the extension's current behavior as implemented in the `v2` 
 - Watches ShipStation AJAX events and order-row interactions.
 - Upgrades ShipStation `/api/orders/updaterates` requests by forcing `lowPriority=false`.
 - Builds service candidates from dimension mappings plus wildcard international mappings.
-- Filters services by rule conditions.
+- Filters services by enabled toggles and rule conditions.
 - Fetches rates, caches responses, and selects a winner.
 - Applies selected service/package to the active order form.
 - Shows in-page status (`working...`, spinner, cheapest banner, checkmark).
 - Includes `Amazon Shipping Ground(On and Off Amazon)` in domestic non-expedited candidate sets.
+- Skips auto-quote preflight when the relevant size/wildcard pool has no enabled service variants left.
 
 ## Rule Primitives
 
@@ -85,7 +95,8 @@ Additional global rule controls:
 - For exact requested-service matches:
   - `ups ground`
   - `ups ground saver`
-- The engine bypasses normal cheapest-rate comparison and directly applies the configured service.
+- The engine bypasses normal cheapest-rate comparison and directly applies the configured service only when that override service is enabled.
+- When every override service for the match is disabled, the engine falls back to normal rate-shopping.
 - Override services include `sellerProviderId` (`1650146`) and trigger bill-to account selection logic in apply flow.
 
 ## Supported Mapping Families
@@ -122,38 +133,50 @@ Mappings built by `config.buildMappings()` include:
 
 ## Current Service Catalog
 
-Referenced service names:
+Popup service labels currently render as:
 
-- DHL Express Express Worldwide
-- DHL Parcel International Direct - DDU
-- DHL SM Parcel Expedited Max
-- DHL SmartMail Parcel Plus Expedited
-- Amazon Shipping Ground(On and Off Amazon)
-- FedEx 2Day
-- FedEx Express Saver
-- FedEx Ground Economy Parcel Select
-- FedEx Ground
-- FedEx Home Delivery
-- FedEx International Connect Plus
-- FedEx International Economy
-- FedEx International Priority
-- FedEx Priority Overnight
-- FedEx SmartPost Parcel Select
-- FedEx Standard Overnight
-- OnTrac Ground Service
-- UPS Ground Saver
-- UPS Ground (UPS)
-- UPS Ground (UPS by ShipStation)
-- USPS First Class Mail Intl
-- USPS Ground Advantage
-- USPS Priority Mail
-- USPS Priority Mail Intl
+- Amazon Shipping
+  - `Amazon Shipping Ground(On and Off Amazon)`
+- DHL
+  - `DHL Express Express Worldwide`
+  - `DHL Parcel International Direct – DDU`
+  - `DHL SM Parcel Expedited Max`
+  - `DHL SmartMail Parcel Plus Expedited`
+- FedEx
+  - `FedEx 2Day® (FedEx One Rate Extra Large Box)`
+  - `FedEx 2Day® (FedEx One Rate Large Box)`
+  - `FedEx 2Day® (FedEx One Rate® Pak)`
+  - `FedEx 2Day® (Package)`
+  - `FedEx Express Saver (FedEx One Rate Extra Large Box)`
+  - `FedEx Express Saver (FedEx One Rate Large Box)`
+  - `FedEx Express Saver (FedEx One Rate® Pak)`
+  - `FedEx Ground Economy Parcel Select`
+  - `FedEx Ground®`
+  - `FedEx Home Delivery®`
+  - `FedEx International Connect Plus`
+  - `FedEx International Economy`
+  - `FedEx International Priority`
+  - `FedEx Priority Overnight`
+  - `FedEx SmartPost Parcel Select`
+  - `FedEx Standard Overnight®`
+- OnTrac
+  - `OnTrac Ground Service`
+- UPS
+  - `UPS Ground Saver`
+  - `UPS® Ground (UPS by ShipStation)`
+  - `UPS® Ground (UPS)`
+- USPS
+  - `USPS First Class Mail Intl`
+  - `USPS Ground Advantage`
+  - `USPS Priority Mail (Large Envelope or Flat)`
+  - `USPS Priority Mail (Package)`
+  - `USPS Priority Mail Intl`
 
-Note: source code keeps exact display strings for matching and UI output.
+Note: runtime matching still uses the exact service display strings in `src/config.js`. The popup label may append package text for duplicate-name variants.
 
 ## Selection Logic
 
-- Filters candidates by service-level conditions, then applies common conditions.
+- Filters out disabled service toggles first, then applies service-level conditions and common conditions.
 - Parses rates from ShipStation responses.
 - For expedited requests (`2-day delivery`/`next day delivery`):
   - computes delivery day count from `DeliveryTime`
@@ -163,7 +186,9 @@ Note: source code keeps exact display strings for matching and UI output.
   - chooses lowest positive price
   - uses `PRIORITY_MAP` for ties
 - For store override matches:
-  - skips cheapest-rate comparison and applies configured service directly.
+  - skips cheapest-rate comparison and applies the configured service directly when that override service is enabled
+  - falls back to normal rate-shopping when all override services for the match are disabled
+- If rate-shopping finishes without a valid cheapest service, the engine clears WIP state and removes the processing spinner instead of leaving the order UI stuck in a working state.
 
 ## Known Feature Boundaries
 

@@ -2,7 +2,7 @@
 
 This repository contains a Chrome extension that runs inside ShipStation and rate-shops shipments using hard-coded business rules. It evaluates eligible carrier/service/package combinations, fetches rates, selects the winning option, and applies that selection to the open order UI.
 
-The current source/runtime version in this branch is `2.0.4`. There is no build step or test suite in-repo. The checked-in JavaScript files are runtime files loaded directly by Chrome.
+The current source/runtime version in this branch is `2.0.5`. There is no build step or test suite in-repo. The checked-in JavaScript files are runtime files loaded directly by Chrome.
 
 ## Read First
 
@@ -24,10 +24,13 @@ Read the docs in this order:
 - Exposes popup controls in `chrome.storage.sync`:
   - `enabled`
   - `autorun`
+  - `enabledServices`
+- Shows all supported service variants in the popup under carrier-grouped service toggles.
 - Hooks ShipStation AJAX lifecycle events to trigger rating and selection flows.
 - Builds candidate services from dimensions + requested-service text + country + residential/commercial + store-specific overrides.
 - Includes `Amazon Shipping Ground(On and Off Amazon)` for domestic non-expedited requested-service scenarios, except when `StoreName` contains `walmart`.
-- Fetches and caches candidate rates, chooses the winner, and applies selected service/package in the shipment UI.
+- Filters out disabled service toggles before rate requests, winner selection, and store overrides.
+- Fetches and caches candidate rates, chooses the winner, and applies the selected service/package in the shipment UI.
 - Displays in-page status feedback (`working...`, spinner, cheapest banner, checkmark).
 
 ## V1 To V2 Migration Note
@@ -44,6 +47,7 @@ Read the docs in this order:
 | Path | Role |
 | --- | --- |
 | `manifest.json` | Manifest V3 config and web-accessible runtime modules |
+| `src/serviceCatalog.js` | Shared service toggle catalog and `enabledServices` normalization helpers |
 | `background.js` | Shows action on matching ShipStation pages |
 | `inject.js` | Sequentially injects `src/` runtime modules and bridges settings messages |
 | `src/config.js` | Conditions, mapping templates, store rules, common filters |
@@ -60,11 +64,13 @@ Read the docs in this order:
 - The extension is tightly coupled to ShipStation selectors and endpoint behavior.
 - `inject.js` injects scripts in order and waits for each script `onload` before injecting the next one.
 - Runtime interfaces are exposed as:
+  - `window.FWD.serviceCatalog`
   - `window.FWD.config`
   - `window.FWD.ui`
   - `window.FWD.engine`
 - `window.fwdPaused` is checked at runtime but is not set anywhere in this repository.
 - `manifest.json` uses host permission `https://*.shipstation.com/*`, but content script matching is still scoped to `https://ss4.shipstation.com/*`.
+- Service toggle state defaults to enabled when `enabledServices` is missing entries in `chrome.storage.sync`.
 
 ## Installation And Use
 
@@ -76,6 +82,7 @@ Read the docs in this order:
 6. Configure the extension popup:
    - `Enable rate-shipping`
    - `Automatic rate-shopping`
+   - carrier-grouped `Services` toggles (all enabled by default)
 
 If you need a packaged artifact from this repo, the latest checked-in zip is `fwd-chrome-2.0.1.zip`.
 

@@ -1,11 +1,22 @@
-(function ($, config, ui, engine) {
+(function ($, config, ui, engine, serviceCatalog) {
 
     if (typeof Backbone === 'undefined') { console.error('Backbone not found.'); return; }
 
-    var settings = { enabled: false, autorun: false };
+    var settings = {
+        enabled: false,
+        autorun: false,
+        enabledServices: serviceCatalog.getDefaultEnabledServices(),
+    };
 
     function onSettingChanged(s) {
-        Object.keys(s).forEach(function (k) { settings[k] = s[k]; });
+        Object.keys(s).forEach(function (k) {
+            if (k === 'enabledServices') {
+                settings.enabledServices = serviceCatalog.normalizeEnabledServices(s.enabledServices);
+                return;
+            }
+
+            settings[k] = s[k];
+        });
     }
 
     window.postMessage({ type: 'GET_SETTINGS' }, '*');
@@ -20,6 +31,16 @@
 
     function clickGetQuote() {
         var $c = ui.getContainer();
+        var dims = ui.getDimensions($c);
+
+        if (dims.length && dims.width && dims.height &&
+            !engine.hasMappingForSize(dims.length, dims.width, dims.height, settings.enabledServices)) {
+            engine.logger('No enabled services for size — skipping Get Quote.');
+            ui.clearCheapest(false);
+            ui.removeWip();
+            return;
+        }
+
         if ($c) { engine.logger('Clicking Get Quote...'); $c.find('.get-quote').click(); }
         ui.clearCheapest(true);
     }
@@ -84,14 +105,15 @@
             }
             if (!isActive()) { if (!settings.autorun) ui.clearCheapest(false); return; }
             ui.clearCheapest(true);
-            engine.rateShop(requestData, data);
+            engine.rateShop(requestData, data, settings.enabledServices);
             return;
         }
 
         if (options.url.endsWith('/api/orders/BulkUpdate')) {
             if (!isActive()) { if (!settings.autorun) ui.clearCheapest(false); return; }
             ui.clearCheapest(true);
-            if (!dims.length || !dims.width || !dims.height || !engine.hasMappingForSize(dims.length, dims.width, dims.height)) {
+            if (!dims.length || !dims.width || !dims.height ||
+                !engine.hasMappingForSize(dims.length, dims.width, dims.height, settings.enabledServices)) {
                 engine.logger('No mapping — skipping.');
                 ui.removeWip(true);
                 return;
@@ -102,7 +124,8 @@
 
         if (options.url.includes('/api/shipments/List?orderID=')) {
             if (!isActive()) { if (!settings.autorun) ui.clearCheapest(false); return; }
-            if (!dims.length || !dims.width || !dims.height || !engine.hasMappingForSize(dims.length, dims.width, dims.height)) {
+            if (!dims.length || !dims.width || !dims.height ||
+                !engine.hasMappingForSize(dims.length, dims.width, dims.height, settings.enabledServices)) {
                 engine.logger('No mapping — skipping.');
                 ui.removeWip(true);
                 ui.clearCheapest(false);
@@ -119,4 +142,4 @@
         }
     });
 
-})(Backbone.$, window.FWD.config, FWD.ui, FWD.engine);
+})(Backbone.$, window.FWD.config, FWD.ui, FWD.engine, FWD.serviceCatalog);

@@ -9,6 +9,17 @@ Two notes:
 
 ## Current Release Line
 
+### 2.0.5 - 2026-04-06
+
+Commit message headline: `2.0.5: add carrier-grouped service toggles to popup`
+
+- Added `src/serviceCatalog.js` as the shared source of truth for popup-visible carrier/service variants and `enabledServices` default normalization.
+- Added grouped service toggles to the popup, sorted alphabetically within each carrier and defaulting to enabled for missing storage entries.
+- Added `enabledServices` to the injected settings bridge so the page runtime can live-filter services without reopening the extension.
+- Updated rate-shopping and store overrides to exclude disabled service variants before fetching/applying rates.
+- Fixed the `Rate shop failed — no valid cheapest.` path to clear WIP state and remove the processing spinner instead of leaving ShipStation stuck in a working state.
+- Bumped manifest version to `2.0.5`.
+
 ### 2.0.4 - 2026-03-27
 
 Commit message headline: `2.0.4: exclude Amazon Shipping US for Walmart store orders`

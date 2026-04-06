@@ -1,5 +1,5 @@
 window.FWD = window.FWD || {};
-window.FWD.config = (function () {
+window.FWD.config = (function (serviceCatalog) {
 
     var CONDITIONS = {
         residential:    function (d) { return d.ResidentialIndicator === 'R'; },
@@ -93,7 +93,7 @@ window.FWD.config = (function () {
             if (overrides.package) s.package = overrides.package;
         }
 
-        return s;
+        return serviceCatalog.attachServiceMeta(s);
     }
 
     // ========== STORE-SPECIFIC RULES ==========
@@ -168,9 +168,9 @@ window.FWD.config = (function () {
     }
 
     function intlSvc(service, serviceId, providerId, carrierId, conds) {
-        return { service: service, serviceId: serviceId, 'package': 'Package', packageId: 3,
+        return serviceCatalog.attachServiceMeta({ service: service, serviceId: serviceId, 'package': 'Package', packageId: 3,
             length: null, width: null, height: null, providerId: providerId, carrierId: carrierId,
-            conditions: conds };
+            conditions: conds });
     }
 
     function buildInternational() {
@@ -279,6 +279,7 @@ window.FWD.config = (function () {
                     var clone = JSON.parse(JSON.stringify(sv));
                     Object.keys(wc).forEach(function (k) { clone[k] = wc[k]; });
                     clone.custom = true;
+                    serviceCatalog.attachServiceMeta(clone);
                     m[newKey].push(clone);
                 }
             });
@@ -302,4 +303,4 @@ window.FWD.config = (function () {
         cond:                cond,
         svc:                 svc,
     };
-})();
+})(window.FWD.serviceCatalog);
