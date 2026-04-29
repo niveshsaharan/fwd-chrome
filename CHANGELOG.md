@@ -9,6 +9,18 @@ Two notes:
 
 ## Current Release Line
 
+### 2.0.6 - 2026-04-29
+
+Commit message headline: `2.0.6: add Michaels UPS Ground toggle and popup guidance`
+
+- Added a dedicated popup toggle for the Michaels `ups ground` store override, labeled `UPS® Ground (UPS) - Michaels`.
+- Kept the standard `UPS® Ground (UPS)` toggle scoped to normal rate-shopping candidates.
+- Updated service catalog lookup so explicit store-override toggle IDs can share the same ShipStation service/package as a standard service.
+- Grouped popup service toggles into carrier sections with service counts and row dividers.
+- Added inline info badges for conditional service toggles with simplified hover/focus explanations and downward placement near the top of the services list.
+- Added collapsed-by-default popup service notes for enabled/disabled service behavior, Michaels overrides, Amazon Shipping eligibility, and USPS Priority Mail narrowing.
+- Bumped manifest version to `2.0.6`.
+
 ### 2.0.5 - 2026-04-06
 
 Commit message headline: `2.0.5: add carrier-grouped service toggles to popup`

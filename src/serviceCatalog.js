@@ -10,7 +10,7 @@ window.FWD.serviceCatalog = (function () {
     };
 
     var RAW_ENTRIES = [
-        { id: 'amazon_shipping_ground_package', carrier: 'Amazon Shipping', service: 'Amazon Shipping Ground(On and Off Amazon)', packageId: 3 },
+        { id: 'amazon_shipping_ground_package', carrier: 'Amazon Shipping', service: 'Amazon Shipping Ground(On and Off Amazon)', packageId: 3, info: 'Use for regular US orders, like Free Shipping or Flat Rate. Not used for expedited orders or Walmart store orders.' },
         { id: 'dhl_express_express_worldwide_package', carrier: 'DHL', service: 'DHL Express Express Worldwide', packageId: 3 },
         { id: 'dhl_parcel_international_direct_ddu_package', carrier: 'DHL', service: 'DHL Parcel International Direct – DDU', packageId: 3 },
         { id: 'dhl_sm_parcel_expedited_max_package', carrier: 'DHL', service: 'DHL SM Parcel Expedited Max', packageId: 3 },
@@ -32,13 +32,14 @@ window.FWD.serviceCatalog = (function () {
         { id: 'fedex_smartpost_parcel_select_package', carrier: 'FedEx', service: 'FedEx SmartPost Parcel Select', packageId: 3 },
         { id: 'fedex_standard_overnight_package', carrier: 'FedEx', service: 'FedEx Standard Overnight®', packageId: 3 },
         { id: 'ontrac_ground_service_package', carrier: 'OnTrac', service: 'OnTrac Ground Service', packageId: 3 },
-        { id: 'ups_ground_package', carrier: 'UPS', service: 'UPS® Ground (UPS)', packageId: 3 },
-        { id: 'ups_ground_saver_package', carrier: 'UPS', service: 'UPS Ground Saver', packageId: 3 },
+        { id: 'ups_ground_package', carrier: 'UPS', service: 'UPS® Ground (UPS)', packageId: 3, label: 'UPS® Ground (UPS)' },
+        { id: 'michaels_ups_ground_package', carrier: 'UPS', service: 'UPS® Ground (UPS)', packageId: 3, label: 'UPS® Ground (UPS) - Michaels', info: 'For Michaels orders that say ups ground. Turn this off if you want those orders to shop other enabled services instead.' },
+        { id: 'ups_ground_saver_package', carrier: 'UPS', service: 'UPS Ground Saver', packageId: 3, info: 'For Michaels orders that say ups ground saver, this lets the tool pick UPS Ground Saver directly. Turn it off to rate-shop instead.' },
         { id: 'ups_ground_shipstation_package', carrier: 'UPS', service: 'UPS® Ground (UPS by ShipStation)', packageId: 3 },
         { id: 'usps_first_class_mail_intl_package', carrier: 'USPS', service: 'USPS First Class Mail Intl', packageId: 3 },
         { id: 'usps_ground_advantage_package', carrier: 'USPS', service: 'USPS Ground Advantage', packageId: 3 },
-        { id: 'usps_priority_mail_package', carrier: 'USPS', service: 'USPS Priority Mail', packageId: 3 },
-        { id: 'usps_priority_mail_large_envelope_or_flat', carrier: 'USPS', service: 'USPS Priority Mail', packageId: 1 },
+        { id: 'usps_priority_mail_package', carrier: 'USPS', service: 'USPS Priority Mail', packageId: 3, info: 'When an order asks for USPS Priority Mail, the tool stays with Priority Mail options instead of switching to UPS or FedEx.' },
+        { id: 'usps_priority_mail_large_envelope_or_flat', carrier: 'USPS', service: 'USPS Priority Mail', packageId: 1, info: 'A Priority Mail option for flat or thin shipments, like mailers that should use Large Envelope or Flat.' },
         { id: 'usps_priority_mail_intl_package', carrier: 'USPS', service: 'USPS Priority Mail Intl', packageId: 3 },
     ];
 
@@ -65,9 +66,9 @@ window.FWD.serviceCatalog = (function () {
         return RAW_ENTRIES.map(function (entry) {
             var packageName = entry.package || PACKAGE_NAMES[entry.packageId] || 'Package';
             var duplicateKey = entry.carrier + '___' + entry.service;
-            var label = duplicates[duplicateKey] > 1
+            var label = entry.label || (duplicates[duplicateKey] > 1
                 ? entry.service + ' (' + packageName + ')'
-                : entry.service;
+                : entry.service);
 
             return {
                 id: entry.id,
@@ -76,6 +77,7 @@ window.FWD.serviceCatalog = (function () {
                 packageId: entry.packageId,
                 package: packageName,
                 label: label,
+                info: entry.info || '',
             };
         });
     }
@@ -86,7 +88,10 @@ window.FWD.serviceCatalog = (function () {
 
     ENTRIES.forEach(function (entry) {
         ENTRY_BY_ID[entry.id] = entry;
-        ENTRY_BY_SERVICE_PACKAGE[makeEntryKey(entry.service, entry.packageId)] = entry;
+        var servicePackageKey = makeEntryKey(entry.service, entry.packageId);
+        if (!ENTRY_BY_SERVICE_PACKAGE[servicePackageKey]) {
+            ENTRY_BY_SERVICE_PACKAGE[servicePackageKey] = entry;
+        }
     });
 
     function getEntries() {
@@ -99,16 +104,22 @@ window.FWD.serviceCatalog = (function () {
     }
 
     function attachServiceMeta(service) {
-        var entry = ENTRY_BY_SERVICE_PACKAGE[makeEntryKey(service.service, service.packageId)];
+        var entry = service.toggleId
+            ? ENTRY_BY_ID[service.toggleId]
+            : ENTRY_BY_SERVICE_PACKAGE[makeEntryKey(service.service, service.packageId)];
 
         if (!entry) {
             throw new Error('Missing service catalog entry for ' + service.service + ' / ' + service.packageId);
+        }
+        if (entry.service !== service.service || parseInt(entry.packageId, 10) !== parseInt(service.packageId, 10)) {
+            throw new Error('Service catalog entry mismatch for ' + service.toggleId);
         }
 
         service.toggleId = entry.id;
         service.carrier = entry.carrier;
         service.package = entry.package;
         service.label = entry.label;
+        service.info = entry.info;
 
         return service;
     }

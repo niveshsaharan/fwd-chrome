@@ -12,19 +12,37 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderServiceGroups() {
         serviceGroupsNode.innerHTML = '';
 
+        function setTooltipDirection(infoNode) {
+            var listRect = serviceGroupsNode.getBoundingClientRect();
+            var infoRect = infoNode.getBoundingClientRect();
+            var spaceAbove = infoRect.top - listRect.top;
+
+            infoNode.classList.toggle('service-info-below', spaceAbove < 92);
+        }
+
         serviceCatalog.getGroupedEntries().forEach(function (group) {
             var groupNode = document.createElement('div');
+            var headerNode = document.createElement('div');
             var titleNode = document.createElement('h5');
+            var countNode = document.createElement('span');
+            var servicesNode = document.createElement('div');
 
             groupNode.className = 'carrier-group';
+            headerNode.className = 'carrier-header';
             titleNode.className = 'carrier-title';
             titleNode.textContent = group.carrier;
-            groupNode.appendChild(titleNode);
+            countNode.className = 'carrier-count';
+            countNode.textContent = group.services.length + ' service' + (group.services.length === 1 ? '' : 's');
+            servicesNode.className = 'carrier-services';
+            headerNode.appendChild(titleNode);
+            headerNode.appendChild(countNode);
+            groupNode.appendChild(headerNode);
 
             group.services.forEach(function (service) {
                 var itemNode = document.createElement('div');
                 var checkboxNode = document.createElement('input');
                 var labelNode = document.createElement('label');
+                var infoNode = document.createElement('span');
 
                 itemNode.className = 'setting-item service-setting';
                 checkboxNode.type = 'checkbox';
@@ -37,9 +55,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 itemNode.appendChild(checkboxNode);
                 itemNode.appendChild(labelNode);
-                groupNode.appendChild(itemNode);
+                if (service.info) {
+                    infoNode.className = 'service-info';
+                    infoNode.textContent = 'i';
+                    infoNode.tabIndex = 0;
+                    infoNode.title = service.info;
+                    infoNode.setAttribute('aria-label', service.info);
+                    infoNode.setAttribute('data-tooltip', service.info);
+                    infoNode.addEventListener('mouseenter', function () {
+                        setTooltipDirection(infoNode);
+                    });
+                    infoNode.addEventListener('focus', function () {
+                        setTooltipDirection(infoNode);
+                    });
+                    itemNode.appendChild(infoNode);
+                }
+                servicesNode.appendChild(itemNode);
             });
 
+            groupNode.appendChild(servicesNode);
             serviceGroupsNode.appendChild(groupNode);
         });
 

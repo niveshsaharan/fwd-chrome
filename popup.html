@@ -6,6 +6,8 @@
         body {
             width: 320px;
             padding: 15px;
+            background: #fafafa;
+            color: #333;
             font-family: Arial, sans-serif;
         }
         .settings-section {
@@ -26,6 +28,8 @@
             margin: 10px 0;
         }
         .setting-item label {
+            flex: 1 1 auto;
+            min-width: 0;
             margin-left: 8px;
             cursor: pointer;
             user-select: none;
@@ -40,27 +44,164 @@
             cursor: not-allowed;
         }
         .services-list {
-            max-height: 280px;
+            max-height: 340px;
             overflow-y: auto;
-            padding-right: 4px;
+            padding: 2px 4px 2px 0;
+        }
+        .carrier-group {
+            border: 1px solid #dedede;
+            border-radius: 8px;
+            background: #fff;
         }
         .carrier-group + .carrier-group {
-            margin-top: 14px;
+            margin-top: 8px;
+        }
+        .carrier-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 8px 10px;
+            border-bottom: 1px solid #e7e7e7;
+            border-radius: 7px 7px 0 0;
+            background: #f4f4f4;
         }
         .carrier-title {
-            margin: 0 0 6px 0;
+            margin: 0;
             font-size: 13px;
+            font-weight: 600;
             color: #222;
         }
+        .carrier-count {
+            flex: 0 0 auto;
+            color: #666;
+            font-size: 11px;
+        }
+        .carrier-services {
+            padding: 0 10px;
+        }
         .service-setting {
-            margin: 6px 0;
+            align-items: flex-start;
+            position: relative;
+            min-height: 34px;
+            margin: 0;
+            padding: 7px 0;
+        }
+        .service-setting input {
+            flex: 0 0 auto;
+            margin-top: 1px;
+        }
+        .service-setting + .service-setting {
+            border-top: 1px solid #ededed;
         }
         .service-setting label {
             font-size: 13px;
             line-height: 1.25;
         }
+        .service-info {
+            position: relative;
+            flex: 0 0 auto;
+            box-sizing: border-box;
+            width: 17px;
+            height: 17px;
+            margin: 0 0 0 8px;
+            border: 1px solid #8a8a8a;
+            border-radius: 50%;
+            color: #555;
+            cursor: help;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 15px;
+            text-align: center;
+        }
+        .service-info::after {
+            position: absolute;
+            right: 0;
+            bottom: 23px;
+            z-index: 5;
+            display: none;
+            width: 230px;
+            box-sizing: border-box;
+            padding: 8px 9px;
+            border: 1px solid #d0d0d0;
+            border-radius: 6px;
+            background: #fff;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+            color: #333;
+            content: attr(data-tooltip);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.35;
+            text-align: left;
+            white-space: normal;
+        }
+        .service-info:hover::after,
+        .service-info:focus::after {
+            display: block;
+        }
+        .service-info-below::after {
+            top: 23px;
+            bottom: auto;
+        }
         .services-list.is-disabled {
             opacity: 0.65;
+        }
+        .help-copy {
+            margin: 0 0 8px 0;
+            color: #555;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+        .help-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #555;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+        .help-list li {
+            margin: 6px 0;
+        }
+        .help-list strong {
+            color: #333;
+            font-weight: 600;
+        }
+        .help-list code {
+            color: #333;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+        .notes-panel {
+            border-top: 1px solid #e3e3e3;
+        }
+        .notes-panel summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding-top: 12px;
+            color: #444;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            list-style: none;
+            text-transform: uppercase;
+        }
+        .notes-panel summary::-webkit-details-marker {
+            display: none;
+        }
+        .notes-panel summary::after {
+            content: '+';
+            color: #666;
+            font-size: 16px;
+            line-height: 1;
+        }
+        .notes-panel[open] summary {
+            margin-bottom: 10px;
+        }
+        .notes-panel[open] summary::after {
+            content: '-';
         }
         h3 {
             margin: 0 0 15px 0;
@@ -83,6 +224,16 @@
     <h4>Services</h4>
     <div id="serviceGroups" class="services-list"></div>
 </div>
+<details class="notes-panel">
+    <summary>Service Notes</summary>
+    <p class="help-copy">Checked services are eligible for rate-shopping or matching store overrides. Unchecked services are skipped until they are turned back on.</p>
+    <ul class="help-list">
+        <li><strong>Michaels:</strong> <code>UPS® Ground (UPS) - Michaels</code> controls only Michaels orders requesting <code>ups ground</code>; regular <code>UPS® Ground (UPS)</code> remains separate.</li>
+        <li><strong>Store overrides:</strong> Michaels <code>ups ground</code> and <code>ups ground saver</code> apply directly when their matching service toggle is enabled. If disabled, normal rate-shopping is used.</li>
+        <li><strong>Amazon Shipping:</strong> used only for domestic non-expedited requests and skipped for Walmart store orders.</li>
+        <li><strong>USPS Priority Mail:</strong> requested USPS Priority Mail orders are narrowed to USPS Priority Mail candidates.</li>
+    </ul>
+</details>
 <script src="src/serviceCatalog.js"></script>
 <script src="popup.js"></script>
 </body>

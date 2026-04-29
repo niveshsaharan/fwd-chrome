@@ -14,11 +14,21 @@ This file describes the extension's current behavior as implemented in the `v2` 
 - `Services`
   - Stored in `chrome.storage.sync` as `enabledServices`.
   - Rendered in the popup under carrier headings sorted alphabetically by carrier name.
+  - Carrier groups render as bordered sections with service counts and dividers between service rows.
   - Within each carrier, services are sorted alphabetically by the visible label.
   - Missing `enabledServices` entries default to `true`, so new or previously-unsaved services start enabled.
   - Disabled in popup when `enabled` is off, but saved service states are preserved.
   - Disabled services are excluded from normal rate-shopping and from store-specific override application.
-  - Popup labels add `(<package name>)` only when a carrier has multiple variants with the same service name.
+  - Store-specific override toggles can be separate from standard service toggles. `UPS® Ground (UPS) - Michaels` controls only the Michaels `ups ground` override; `UPS® Ground (UPS)` controls the normal UPS Ground rate-shopping candidate.
+  - Popup labels add `(<package name>)` only when a carrier has multiple variants with the same service name, unless a store-specific catalog entry defines its own label.
+  - Conditional services can define service-specific info text in `src/serviceCatalog.js`; the popup renders these as hover/focus info badges with plain-language examples at the end of the service row.
+  - Info badges near the top of the scrollable services list open downward so the message is not clipped by the list edge.
+  - Current info-badged services are `Amazon Shipping Ground(On and Off Amazon)`, `UPS® Ground (UPS) - Michaels`, `UPS Ground Saver`, and both `USPS Priority Mail` package variants.
+- `Service Notes`
+  - Rendered as a native collapsible `<details>` section in `popup.html` below the service toggles.
+  - Closed by default whenever the popup opens.
+  - Explains that checked services are eligible and unchecked services are skipped.
+  - Calls out Michaels UPS Ground override behavior, direct store override behavior, Amazon Shipping domestic/non-expedited/Walmart behavior, and USPS Priority Mail narrowing.
 
 ## Where The Extension Runs
 
@@ -40,6 +50,7 @@ This file describes the extension's current behavior as implemented in the `v2` 
 - Fetches rates, caches responses, and selects a winner.
 - Applies selected service/package to the active order form.
 - Shows in-page status (`working...`, spinner, cheapest banner, checkmark).
+- Shows inline hover guidance for conditional service toggles and collapsible popup guidance for common service-toggle behavior and key special-case rules.
 - Includes `Amazon Shipping Ground(On and Off Amazon)` in domestic non-expedited candidate sets.
 - Skips auto-quote preflight when the relevant size/wildcard pool has no enabled service variants left.
 
@@ -93,8 +104,8 @@ Additional global rule controls:
 
 - `STORE_RULES` currently defines one store: `Michaels`.
 - For exact requested-service matches:
-  - `ups ground`
-  - `ups ground saver`
+  - `ups ground` applies `UPS® Ground (UPS)` and is controlled by the popup toggle `UPS® Ground (UPS) - Michaels`.
+  - `ups ground saver` applies `UPS Ground Saver` and is controlled by the popup toggle `UPS Ground Saver`.
 - The engine bypasses normal cheapest-rate comparison and directly applies the configured service only when that override service is enabled.
 - When every override service for the match is disabled, the engine falls back to normal rate-shopping.
 - Override services include `sellerProviderId` (`1650146`) and trigger bill-to account selection logic in apply flow.
@@ -165,6 +176,7 @@ Popup service labels currently render as:
   - `UPS Ground Saver`
   - `UPS® Ground (UPS by ShipStation)`
   - `UPS® Ground (UPS)`
+  - `UPS® Ground (UPS) - Michaels`
 - USPS
   - `USPS First Class Mail Intl`
   - `USPS Ground Advantage`

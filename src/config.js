@@ -106,7 +106,7 @@ window.FWD.config = (function (serviceCatalog) {
             {
                 match: 'ups ground',
                 exact: true,
-                services: [svc('upsGround', undefined, undefined, undefined, {sellerProviderId: 1650146, providerId: 3, accountType: 'other-account'})],
+                services: [svc('upsGround', undefined, undefined, undefined, {toggleId: 'michaels_ups_ground_package', sellerProviderId: 1650146, providerId: 3, accountType: 'other-account'})],
             },
             {
                 match: 'ups ground saver',

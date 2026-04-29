@@ -96,6 +96,8 @@ Modules publish into `window.FWD`:
 
 For these matches the engine bypasses normal rate-shopping and applies predefined service objects only when those override services are enabled in `enabledServices`. The apply flow also supports bill-to account switching using `sellerProviderId` in override service data.
 
+The Michaels `ups ground` override uses the dedicated service-toggle id `michaels_ups_ground_package`, shown in the popup as `UPS® Ground (UPS) - Michaels`. The standard `UPS® Ground (UPS)` rate-shopping candidate keeps its own toggle id, `ups_ground_package`.
+
 ## Caching And Selection
 
 Cache key is based on:
