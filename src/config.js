@@ -279,6 +279,7 @@ window.FWD.config = (function (serviceCatalog) {
                     var clone = JSON.parse(JSON.stringify(sv));
                     Object.keys(wc).forEach(function (k) { clone[k] = wc[k]; });
                     clone.custom = true;
+                    delete clone.toggleId;
                     serviceCatalog.attachServiceMeta(clone);
                     m[newKey].push(clone);
                 }

@@ -2,7 +2,7 @@
 
 This repository contains a Chrome extension that runs inside ShipStation and rate-shops shipments using hard-coded business rules. It evaluates eligible carrier/service/package combinations, fetches rates, selects the winning option, and applies that selection to the open order UI.
 
-The current source/runtime version in this branch is `2.0.6`. There is no build step or test suite in-repo. The checked-in JavaScript files are runtime files loaded directly by Chrome.
+The current source/runtime version in this branch is `2.0.7`. There is no build step or test suite in-repo. The checked-in JavaScript files are runtime files loaded directly by Chrome.
 
 ## Read First
 

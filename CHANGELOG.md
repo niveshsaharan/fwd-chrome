@@ -9,6 +9,14 @@ Two notes:
 
 ## Current Release Line
 
+### 2.0.7 - 2026-04-30
+
+Commit message headline: `2.0.7: fix USPS Priority Mail flat mapping metadata`
+
+- Fixed runtime initialization failure caused by `when_cheapest` USPS Priority Mail clones keeping the original Package toggle id after switching to the Large Envelope or Flat package variant.
+- Restored `FWD.engine` initialization so popup/runtime calls such as `engine.hasMappingForSize` are available.
+- Bumped manifest version to `2.0.7`.
+
 ### 2.0.6 - 2026-04-29
 
 Commit message headline: `2.0.6: add Michaels UPS Ground toggle and popup guidance`
