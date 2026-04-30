@@ -9,6 +9,17 @@ Two notes:
 
 ## Current Release Line
 
+### 2.0.8 - 2026-04-30
+
+Commit message headline: `2.0.8: skip already-correct selections`
+
+- Added popup setting `Skip already-correct selections`, stored as `skipAlreadySelected` and defaulting to enabled when missing.
+- Added deterministic direct-selection short-circuiting when service, package, dimensions, and required bill-to seller provider already match the enabled target service.
+- Added an autorun preflight that avoids clicking `Get Quote` when the current form exposes enough data to prove an enabled direct selection is already selected.
+- Added normal cheapest-rate apply skipping after rates confirm the current selected service/package/dimensions already match the winning service.
+- Kept normal cheapest-rate network requests unchanged because cheapest status is not skipped without current rates.
+- Bumped manifest version to `2.0.8`.
+
 ### 2.0.7 - 2026-04-30
 
 Commit message headline: `2.0.7: fix USPS Priority Mail flat mapping metadata`

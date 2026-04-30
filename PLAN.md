@@ -31,6 +31,7 @@ Recommended next step:
 - add tests for exact/contains match behavior in `getStoreOverride`
 - verify override apply flow including `sellerProviderId` bill-to selection
 - verify store-specific toggle IDs such as `michaels_ups_ground_package` do not disable or enable similarly named standard services
+- add regression tests for `skipAlreadySelected` so already-correct selections skip only when service, package, dimensions, and required bill-to account all match
 - define explicit guardrails for adding new store rules (required fields, matching policy, expected outcome)
 
 ## 3. Harden ShipStation Coupling Points

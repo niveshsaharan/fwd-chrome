@@ -175,6 +175,82 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         return fastest;
     }
 
+    function parseNumber(value) {
+        var parsed = parseInt(value, 10);
+        return isNaN(parsed) ? null : parsed;
+    }
+
+    function requiredNumberMatches(actual, expected) {
+        return parseNumber(actual) === parseNumber(expected);
+    }
+
+    function optionalNumberMatches(actual, expected) {
+        if (actual == null || actual === '' || expected == null || expected === '') return true;
+        return requiredNumberMatches(actual, expected);
+    }
+
+    function getSelectionTarget(service) {
+        var target = JSON.parse(JSON.stringify(service));
+
+        if (target.when_cheapest && target.custom !== true) {
+            Object.keys(target.when_cheapest).forEach(function (k) {
+                target[k] = target.when_cheapest[k];
+            });
+        }
+
+        return target;
+    }
+
+    function serviceMatchesCurrentSelection(service, shipmentState) {
+        var target = getSelectionTarget(service);
+        shipmentState = shipmentState || ui.getCurrentShipmentState(ui.getContainer());
+
+        if (!requiredNumberMatches(shipmentState.ServiceID, target.serviceId)) return false;
+        if (!requiredNumberMatches(shipmentState.RequestedPackageTypeID, target.packageId)) return false;
+        if (!optionalNumberMatches(shipmentState.ProviderID, target.providerId)) return false;
+        if (!optionalNumberMatches(shipmentState.CarrierID, target.carrierId)) return false;
+        if (target.sellerProviderId && !requiredNumberMatches(shipmentState.SellerProviderID, target.sellerProviderId)) return false;
+        if (target.length != null && !requiredNumberMatches(shipmentState.Length, target.length)) return false;
+        if (target.width != null && !requiredNumberMatches(shipmentState.Width, target.width)) return false;
+        if (target.height != null && !requiredNumberMatches(shipmentState.Height, target.height)) return false;
+
+        return true;
+    }
+
+    function getEnabledStoreOverride(orderData, enabledServices) {
+        var storeOverride = config.getStoreOverride(orderData.StoreName, orderData.RequestedShippingService);
+        if (!storeOverride) return null;
+
+        var enabledOverrideServices = storeOverride.filter(function (service) {
+            return serviceCatalog.isServiceEnabled(service.toggleId, enabledServices);
+        });
+
+        return enabledOverrideServices.length ? enabledOverrideServices[0] : null;
+    }
+
+    function markAlreadySelected(service, keepCheapestBanner) {
+        var $c = ui.getContainer();
+        if (!keepCheapestBanner) {
+            ui.clearCheapest(false);
+        }
+        ui.hideProcessing();
+        ui.removeWip();
+        ui.showCheckmark($c);
+        logger('Selection already correct — skipping changes.', service);
+    }
+
+    function skipAlreadySelectedDirectSelection(enabledServices) {
+        var shipmentState = ui.getCurrentShipmentState(ui.getContainer());
+        var overrideService = getEnabledStoreOverride(shipmentState, enabledServices);
+
+        if (!overrideService || !serviceMatchesCurrentSelection(overrideService, shipmentState)) {
+            return false;
+        }
+
+        markAlreadySelected(overrideService, false);
+        return true;
+    }
+
     function applySelection(data, service) {
         service = JSON.parse(JSON.stringify(service));
 
@@ -250,7 +326,8 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
     }
     
 
-    async function rateShop(requestData, responseData, enabledServices) {
+    async function rateShop(requestData, responseData, enabledServices, options) {
+        options = options || {};
 
         const serviceMappingWithPrices = JSON.parse(
             JSON.stringify(serviceMappings)
@@ -261,12 +338,13 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         var storeOverride = config.getStoreOverride(order.StoreName, order.RequestedShippingService);
 
         if (storeOverride) {
-            var enabledOverrideServices = storeOverride.filter(function (service) {
-                return serviceCatalog.isServiceEnabled(service.toggleId, enabledServices);
-            });
+            var overrideService = getEnabledStoreOverride(order, enabledServices);
 
-            if (enabledOverrideServices.length) {
-                var overrideService = enabledOverrideServices[0];
+            if (overrideService) {
+                if (options.skipAlreadySelected && serviceMatchesCurrentSelection(overrideService)) {
+                    markAlreadySelected(overrideService, false);
+                    return;
+                }
                 ui.clearCheapest(true);
                 applySelection(requestData, Object.assign({}, overrideService, { order: order }));
                 return;
@@ -326,6 +404,10 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         if (cheapest && cheapest.price > 0 && cheapest.order && ui.currentlyViewingSameOrder(cheapest.order.OrderNumber)) {
             ui.clearCheapest(true);
             ui.showCheapestBanner(ui.getContainer(), cheapest);
+            if (options.skipAlreadySelected && serviceMatchesCurrentSelection(cheapest)) {
+                markAlreadySelected(cheapest, true);
+                return;
+            }
             applySelection(requestData, cheapest);
         } else {
             ui.clearCheapest(false);
@@ -345,6 +427,7 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
     return {
         rateShop:           rateShop,
         hasMappingForSize:  hasMappingForSize,
+        skipAlreadySelectedDirectSelection: skipAlreadySelectedDirectSelection,
         logger:             logger,
     };
 

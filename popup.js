@@ -2,10 +2,12 @@ document.addEventListener('DOMContentLoaded', function () {
     var serviceCatalog = window.FWD && window.FWD.serviceCatalog;
     var enabledCheckboxNode = document.getElementById('enabledCheckbox');
     var autorunCheckboxNode = document.getElementById('autorunCheckbox');
+    var skipAlreadySelectedCheckboxNode = document.getElementById('skipAlreadySelectedCheckbox');
     var serviceGroupsNode = document.getElementById('serviceGroups');
     var state = {
         enabled: false,
         autorun: false,
+        skipAlreadySelected: true,
         enabledServices: serviceCatalog.getDefaultEnabledServices(),
     };
 
@@ -85,7 +87,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         enabledCheckboxNode.checked = state.enabled;
         autorunCheckboxNode.checked = state.autorun;
+        skipAlreadySelectedCheckboxNode.checked = state.skipAlreadySelected;
         autorunCheckboxNode.disabled = !state.enabled;
+        skipAlreadySelectedCheckboxNode.disabled = !state.enabled;
         serviceGroupsNode.classList.toggle('is-disabled', !state.enabled);
 
         serviceNodes.forEach(function (node) {
@@ -94,9 +98,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    chrome.storage.sync.get(['enabled', 'autorun', 'enabledServices'], function (result) {
+    chrome.storage.sync.get(['enabled', 'autorun', 'enabledServices', 'skipAlreadySelected'], function (result) {
         state.enabled = !!result.enabled;
         state.autorun = !!result.autorun;
+        state.skipAlreadySelected = result.skipAlreadySelected !== false;
         state.enabledServices = serviceCatalog.normalizeEnabledServices(result.enabledServices);
 
         renderServiceGroups();
@@ -120,6 +125,16 @@ document.addEventListener('DOMContentLoaded', function () {
             autorun: state.autorun
         }, function () {
             console.log('Autorun Setting saved:', state.autorun);
+        });
+    });
+
+    skipAlreadySelectedCheckboxNode.addEventListener('change', function () {
+        state.skipAlreadySelected = skipAlreadySelectedCheckboxNode.checked;
+
+        chrome.storage.sync.set({
+            skipAlreadySelected: state.skipAlreadySelected
+        }, function () {
+            console.log('Skip already-selected setting saved:', state.skipAlreadySelected);
         });
     });
 

@@ -220,6 +220,10 @@
     <input type="checkbox" id="autorunCheckbox">
     <label for="autorunCheckbox">Automatic rate-shopping</label>
 </div>
+<div class="setting-item">
+    <input type="checkbox" id="skipAlreadySelectedCheckbox">
+    <label for="skipAlreadySelectedCheckbox">Skip already-correct selections</label>
+</div>
 <div class="settings-section">
     <h4>Services</h4>
     <div id="serviceGroups" class="services-list"></div>
@@ -230,6 +234,7 @@
     <ul class="help-list">
         <li><strong>Michaels:</strong> <code>UPS® Ground (UPS) - Michaels</code> controls only Michaels orders requesting <code>ups ground</code>; regular <code>UPS® Ground (UPS)</code> remains separate.</li>
         <li><strong>Store overrides:</strong> Michaels <code>ups ground</code> and <code>ups ground saver</code> apply directly when their matching service toggle is enabled. If disabled, normal rate-shopping is used.</li>
+        <li><strong>Skip already-correct:</strong> when enabled, matching selections are left alone if service, package, dimensions, and bill-to account are already correct.</li>
         <li><strong>Amazon Shipping:</strong> used only for domestic non-expedited requests and skipped for Walmart store orders.</li>
         <li><strong>USPS Priority Mail:</strong> requested USPS Priority Mail orders are narrowed to USPS Priority Mail candidates.</li>
     </ul>

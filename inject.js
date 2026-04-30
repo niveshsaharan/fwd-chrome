@@ -21,13 +21,14 @@ async function injectAll() {
 window.addEventListener('message', function (event) {
     if (event.source !== window) return;
     if (event.data.type === 'GET_SETTINGS') {
-        chrome.storage.sync.get(['enabled', 'autorun', 'enabledServices'], function (result) {
+        chrome.storage.sync.get(['enabled', 'autorun', 'enabledServices', 'skipAlreadySelected'], function (result) {
             window.postMessage({
                 type: 'SETTINGS_RESPONSE',
                 settings: {
                     enabled: !!result.enabled,
                     autorun: !!result.autorun,
                     enabledServices: serviceCatalog.normalizeEnabledServices(result.enabledServices),
+                    skipAlreadySelected: result.skipAlreadySelected !== false,
                 }
             }, '*');
         });
@@ -35,10 +36,11 @@ window.addEventListener('message', function (event) {
 });
 
 chrome.storage.onChanged.addListener(function (changes, namespace) {
-    if (namespace === 'sync' && (changes.autorun || changes.enabled || changes.enabledServices)) {
+    if (namespace === 'sync' && (changes.autorun || changes.enabled || changes.enabledServices || changes.skipAlreadySelected)) {
         var data = {};
         if (changes.autorun) data.autorun = changes.autorun.newValue;
         if (changes.enabled) data.enabled = changes.enabled.newValue;
+        if (changes.skipAlreadySelected) data.skipAlreadySelected = changes.skipAlreadySelected.newValue !== false;
         if (changes.enabledServices) {
             data.enabledServices = serviceCatalog.normalizeEnabledServices(changes.enabledServices.newValue);
         }

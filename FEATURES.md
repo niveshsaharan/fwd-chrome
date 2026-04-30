@@ -11,6 +11,13 @@ This file describes the extension's current behavior as implemented in the `v2` 
   - Stored in `chrome.storage.sync` as `autorun`.
   - Disabled in popup when `enabled` is off.
   - When on, selecting/opening an order triggers a delayed `Get Quote` click.
+- `Skip already-correct selections`
+  - Stored in `chrome.storage.sync` as `skipAlreadySelected`.
+  - Defaults to on when the storage key is missing.
+  - Disabled in popup when `enabled` is off.
+  - Direct deterministic selections, such as enabled store overrides, can skip before quoting when the current selected service, package, dimensions, and required bill-to seller provider already match.
+  - Normal cheapest-rate shopping still checks rates first, then skips only the final apply step when the confirmed winner already matches the current selection.
+  - Does not skip normal cheapest-rate network requests before rates are checked, because current cheapest status cannot be proven without rates.
 - `Services`
   - Stored in `chrome.storage.sync` as `enabledServices`.
   - Rendered in the popup under carrier headings sorted alphabetically by carrier name.
@@ -28,6 +35,7 @@ This file describes the extension's current behavior as implemented in the `v2` 
   - Rendered as a native collapsible `<details>` section in `popup.html` below the service toggles.
   - Closed by default whenever the popup opens.
   - Explains that checked services are eligible and unchecked services are skipped.
+  - Explains that already-correct selections can be left alone when `skipAlreadySelected` is enabled.
   - Calls out Michaels UPS Ground override behavior, direct store override behavior, Amazon Shipping domestic/non-expedited/Walmart behavior, and USPS Priority Mail narrowing.
 
 ## Where The Extension Runs
@@ -47,6 +55,7 @@ This file describes the extension's current behavior as implemented in the `v2` 
 - Upgrades ShipStation `/api/orders/updaterates` requests by forcing `lowPriority=false`.
 - Builds service candidates from dimension mappings plus wildcard international mappings.
 - Filters services by enabled toggles and rule conditions.
+- Skips already-correct selections when `skipAlreadySelected` is enabled.
 - Fetches rates, caches responses, and selects a winner.
 - Applies selected service/package to the active order form.
 - Shows in-page status (`working...`, spinner, cheapest banner, checkmark).
@@ -198,8 +207,10 @@ Note: runtime matching still uses the exact service display strings in `src/conf
   - chooses lowest positive price
   - uses `PRIORITY_MAP` for ties
 - For store override matches:
+  - skips rate-shopping/apply work when `skipAlreadySelected` is enabled and the current selected service/package/required bill-to account already matches the enabled override
   - skips cheapest-rate comparison and applies the configured service directly when that override service is enabled
   - falls back to normal rate-shopping when all override services for the match are disabled
+- For normal cheapest-rate matches, the engine still checks current rates, then skips applying the winner when `skipAlreadySelected` is enabled and the current selected service/package/dimensions already match that winner.
 - If rate-shopping finishes without a valid cheapest service, the engine clears WIP state and removes the processing spinner instead of leaving the order UI stuck in a working state.
 
 ## Known Feature Boundaries

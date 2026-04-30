@@ -38,6 +38,7 @@ Then read code in order:
   - `enabled`
   - `autorun`
   - `enabledServices`
+  - `skipAlreadySelected`
 - `window.fwdPaused` is referenced but not set in this repository.
 
 ## Mandatory Documentation Updates

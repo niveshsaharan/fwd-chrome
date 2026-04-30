@@ -5,6 +5,7 @@
     var settings = {
         enabled: false,
         autorun: false,
+        skipAlreadySelected: true,
         enabledServices: serviceCatalog.getDefaultEnabledServices(),
     };
 
@@ -32,6 +33,10 @@
     function clickGetQuote() {
         var $c = ui.getContainer();
         var dims = ui.getDimensions($c);
+
+        if (settings.skipAlreadySelected && engine.skipAlreadySelectedDirectSelection(settings.enabledServices)) {
+            return;
+        }
 
         if (dims.length && dims.width && dims.height &&
             !engine.hasMappingForSize(dims.length, dims.width, dims.height, settings.enabledServices)) {
@@ -105,7 +110,9 @@
             }
             if (!isActive()) { if (!settings.autorun) ui.clearCheapest(false); return; }
             ui.clearCheapest(true);
-            engine.rateShop(requestData, data, settings.enabledServices);
+            engine.rateShop(requestData, data, settings.enabledServices, {
+                skipAlreadySelected: settings.skipAlreadySelected,
+            });
             return;
         }
 

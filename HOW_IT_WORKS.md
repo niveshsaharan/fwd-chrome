@@ -14,7 +14,7 @@ This repository now uses a modular runtime (`v2`) rather than a single injected 
 | `src/ui.js` | ShipStation UI helpers (WIP state, spinner, cheapest banner, checkmark, selectors) |
 | `src/engine.js` | Rate-shop engine (filtering, fetch/cache, selection, apply flow) |
 | `src/main.js` | Orchestrates settings sync, click handlers, and AJAX hooks |
-| `popup.html` + `popup.js` | Reads/writes `enabled`, `autorun`, and `enabledServices` in `chrome.storage.sync` |
+| `popup.html` + `popup.js` | Reads/writes `enabled`, `autorun`, `skipAlreadySelected`, and `enabledServices` in `chrome.storage.sync` |
 
 ## Why `inject.js` Exists
 
@@ -42,6 +42,7 @@ This guarantees dependencies are available before later modules execute.
 
 Runtime settings object in `src/main.js` is updated from these messages and controls whether rate-shopping logic runs.
 `enabledServices` is normalized against `src/serviceCatalog.js`, so missing toggle ids default to enabled and stale ids are dropped.
+`skipAlreadySelected` defaults to enabled when the storage key is missing.
 
 ## Public Runtime Interfaces
 
@@ -54,7 +55,7 @@ Modules publish into `window.FWD`:
 - `window.FWD.ui`
   - DOM helpers and visual state helpers
 - `window.FWD.engine`
-  - `rateShop`, `hasMappingForSize`, `logger`
+  - `rateShop`, `hasMappingForSize`, `skipAlreadySelectedDirectSelection`, `logger`
 
 `src/main.js` consumes these interfaces and wires page events.
 
@@ -78,14 +79,15 @@ Modules publish into `window.FWD`:
 1. Clone base mappings for each call (`2.0.1` fix) so per-request mutations do not leak across requests.
 2. Read active order from `requestData.orderViews[0]`.
 3. Check `STORE_RULES` override using store name + requested shipping service.
-4. If override matches and at least one override service toggle is enabled, skip normal rate comparison and directly apply the enabled override service.
-5. Otherwise, build candidate list from size mapping + wildcard `***` mapping.
-6. Apply exception-dimension gate (`2x2x2` only for configured expedited requested services).
-7. Filter candidates by `enabledServices`, per-service conditions, and `COMMON_CONDITIONS`.
-8. Seed service prices from the triggering `/api/orders/updaterates` response once (when present), then fetch any remaining services (with cache lookup first) using ShipStation `/api/orders/updaterates`.
-9. Parse prices/delivery timing and select winner.
-10. Render cheapest banner and apply service/package in UI.
-11. If no valid cheapest candidate survives final validation, clear WIP/processing UI before logging the failure.
+4. If override matches and at least one override service toggle is enabled, optionally skip when `skipAlreadySelected` is enabled and the current selected service/package/required bill-to account already matches.
+5. If the override still needs work, skip normal rate comparison and directly apply the enabled override service.
+6. Otherwise, build candidate list from size mapping + wildcard `***` mapping.
+7. Apply exception-dimension gate (`2x2x2` only for configured expedited requested services).
+8. Filter candidates by `enabledServices`, per-service conditions, and `COMMON_CONDITIONS`.
+9. Seed service prices from the triggering `/api/orders/updaterates` response once (when present), then fetch any remaining services (with cache lookup first) using ShipStation `/api/orders/updaterates`.
+10. Parse prices/delivery timing and select winner.
+11. Render cheapest banner and apply service/package in UI.
+12. If no valid cheapest candidate survives final validation, clear WIP/processing UI before logging the failure.
 
 ## Store Override Short-Circuit
 
@@ -97,6 +99,8 @@ Modules publish into `window.FWD`:
 For these matches the engine bypasses normal rate-shopping and applies predefined service objects only when those override services are enabled in `enabledServices`. The apply flow also supports bill-to account switching using `sellerProviderId` in override service data.
 
 The Michaels `ups ground` override uses the dedicated service-toggle id `michaels_ups_ground_package`, shown in the popup as `UPS® Ground (UPS) - Michaels`. The standard `UPS® Ground (UPS)` rate-shopping candidate keeps its own toggle id, `ups_ground_package`.
+
+When `skipAlreadySelected` is enabled, `src/main.js` asks `engine.skipAlreadySelectedDirectSelection()` before autorun clicks `Get Quote`. This preflight only skips when `src/ui.js` can read enough current form data to prove an enabled deterministic direct selection is already selected. `engine.rateShop()` repeats the same service/package/bill-to check after `/api/orders/updaterates` responses to avoid follow-up rate requests and apply work when the direct selection is already correct. For normal cheapest-rate flows, `engine.rateShop()` still checks rates first and only skips the final apply step after the current winner is known.
 
 ## Caching And Selection
 

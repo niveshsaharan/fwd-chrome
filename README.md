@@ -2,7 +2,7 @@
 
 This repository contains a Chrome extension that runs inside ShipStation and rate-shops shipments using hard-coded business rules. It evaluates eligible carrier/service/package combinations, fetches rates, selects the winning option, and applies that selection to the open order UI.
 
-The current source/runtime version in this branch is `2.0.7`. There is no build step or test suite in-repo. The checked-in JavaScript files are runtime files loaded directly by Chrome.
+The current source/runtime version in this branch is `2.0.8`. There is no build step or test suite in-repo. The checked-in JavaScript files are runtime files loaded directly by Chrome.
 
 ## Read First
 
@@ -25,12 +25,14 @@ Read the docs in this order:
   - `enabled`
   - `autorun`
   - `enabledServices`
+  - `skipAlreadySelected`
 - Shows all supported service variants in the popup under carrier-grouped service toggles.
 - Provides a dedicated `UPS® Ground (UPS) - Michaels` popup toggle for the Michaels `ups ground` store override.
 - Shows inline info badges for conditional service toggles that need extra context.
 - Shows collapsible popup service notes explaining enabled/disabled service behavior, Michaels overrides, Amazon Shipping eligibility, and USPS Priority Mail narrowing.
 - Hooks ShipStation AJAX lifecycle events to trigger rating and selection flows.
 - Builds candidate services from dimensions + requested-service text + country + residential/commercial + store-specific overrides.
+- Skips already-correct selections when `skipAlreadySelected` is enabled: deterministic direct selections can skip before quoting, and cheapest-rate flows skip the final apply step after rates confirm the current selection is already the winner.
 - Includes `Amazon Shipping Ground(On and Off Amazon)` for domestic non-expedited requested-service scenarios, except when `StoreName` contains `walmart`.
 - Filters out disabled service toggles before rate requests, winner selection, and store overrides.
 - Fetches and caches candidate rates, chooses the winner, and applies the selected service/package in the shipment UI.
@@ -74,6 +76,7 @@ Read the docs in this order:
 - `window.fwdPaused` is checked at runtime but is not set anywhere in this repository.
 - `manifest.json` uses host permission `https://*.shipstation.com/*`, but content script matching is still scoped to `https://ss4.shipstation.com/*`.
 - Service toggle state defaults to enabled when `enabledServices` is missing entries in `chrome.storage.sync`.
+- Already-correct selection skipping defaults to enabled when `skipAlreadySelected` is missing in `chrome.storage.sync`.
 
 ## Installation And Use
 
@@ -85,6 +88,7 @@ Read the docs in this order:
 6. Configure the extension popup:
    - `Enable rate-shipping`
    - `Automatic rate-shopping`
+   - `Skip already-correct selections`
    - carrier-grouped `Services` toggles (all enabled by default)
 
 If you need a packaged artifact from this repo, the latest checked-in zip is `fwd-chrome-2.0.1.zip`.

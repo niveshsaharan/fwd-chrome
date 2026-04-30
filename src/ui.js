@@ -85,6 +85,45 @@ FWD.ui = (function ($) {
         };
     }
 
+    function readValue(container, selectors) {
+        for (var i = 0; i < selectors.length; i++) {
+            var node = container.find(selectors[i]).first();
+            if (!node.length) continue;
+
+            var value = node.val();
+            if (value == null || value === '') value = node.text();
+            value = (value == null) ? '' : String(value).trim();
+            if (value) return value;
+        }
+        return '';
+    }
+
+    function getCurrentShipmentState(container) {
+        container = container || getContainer();
+
+        return {
+            StoreName: readValue(container, [
+                '[name="StoreName"]',
+                '[name="storeName"]',
+                '[data-role="store-name"]',
+            ]),
+            RequestedShippingService: readValue(container, [
+                '[name="RequestedShippingService"]',
+                '[name="requestedShippingService"]',
+                '[name="RequestedService"]',
+                '[data-role="requested-service"]',
+            ]),
+            ServiceID: readValue(container, ['[name="ServiceID"]']),
+            RequestedPackageTypeID: readValue(container, ['[name="RequestedPackageTypeID"]']),
+            ProviderID: readValue(container, ['[name="ProviderID"]']),
+            CarrierID: readValue(container, ['[name="CarrierID"]']),
+            Length: readValue(container, ['[name="LengthIn"]']),
+            Width: readValue(container, ['[name="WidthIn"]']),
+            Height: readValue(container, ['[name="HeightIn"]']),
+            SellerProviderID: container.find('select.billToSelect option:selected').data('sellerproviderid'),
+        };
+    }
+
     function currentlyViewingSameOrder(orderNumber) {
         var text = (($('.modal.order-detail .order-num a').text() ||
             $('.modal.order-detail .order-num').text() ||
@@ -104,6 +143,7 @@ FWD.ui = (function ($) {
         hideProcessing: hideProcessing,
         showCheapestBanner: showCheapestBanner,
         getDimensions: getDimensions,
+        getCurrentShipmentState: getCurrentShipmentState,
         currentlyViewingSameOrder: currentlyViewingSameOrder,
     };
 
