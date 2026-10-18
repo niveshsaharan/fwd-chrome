@@ -34,6 +34,8 @@ window.FWD.serviceCatalog = (function () {
         { id: 'ontrac_ground_service_package', carrier: 'OnTrac', service: 'OnTrac Ground Service', packageId: 3 },
         { id: 'ups_ground_package', carrier: 'UPS', service: 'UPS® Ground (UPS)', packageId: 3, label: 'UPS® Ground (UPS)' },
         { id: 'michaels_ups_ground_package', carrier: 'UPS', service: 'UPS® Ground (UPS)', packageId: 3, label: 'UPS® Ground (UPS) - Michaels', info: 'For Michaels orders that say ups ground. Turn this off if you want those orders to shop other enabled services instead.' },
+        { id: 'michaels_ups_ground_saver_lt1lb_package', carrier: 'UPS', service: 'UPS Ground Saver Less than 1 lb', packageId: 3, label: 'UPS Ground Saver Less than 1 lb - Michaels', info: 'For Michaels orders that say UPS SurePost and weigh under 16 oz. Bills to UPS - Michaels. Turn off to rate-shop instead.' },
+        { id: 'michaels_ups_ground_saver_ge1lb_package', carrier: 'UPS', service: 'UPS Ground Saver 1 lb or Greater', packageId: 3, label: 'UPS Ground Saver 1 lb or Greater - Michaels', info: 'For Michaels orders that say UPS SurePost and weigh 16 oz or more. Bills to UPS - Michaels. Turn off to rate-shop instead.' },
         { id: 'ups_ground_saver_package', carrier: 'UPS', service: 'UPS Ground Saver', packageId: 3, info: 'For Michaels orders that say ups ground saver, this lets the tool pick UPS Ground Saver directly. Turn it off to rate-shop instead.' },
         { id: 'ups_ground_shipstation_package', carrier: 'UPS', service: 'UPS® Ground (UPS by ShipStation)', packageId: 3 },
         { id: 'usps_first_class_mail_intl_package', carrier: 'USPS', service: 'USPS First Class Mail Intl', packageId: 3 },

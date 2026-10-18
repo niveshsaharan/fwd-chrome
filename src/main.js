@@ -109,6 +109,10 @@
                 engine.logger('LP response', requestData, data);
             }
             if (!isActive()) { if (!settings.autorun) ui.clearCheapest(false); return; }
+            if (engine.isSelectionSyncInProgress(requestData)) {
+                engine.logger('Ignoring updaterates response triggered by winner synchronization.');
+                return;
+            }
             ui.clearCheapest(true);
             engine.rateShop(requestData, data, settings.enabledServices, {
                 skipAlreadySelected: settings.skipAlreadySelected,

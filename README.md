@@ -2,7 +2,7 @@
 
 This repository contains a Chrome extension that runs inside ShipStation and rate-shops shipments using hard-coded business rules. It evaluates eligible carrier/service/package combinations, fetches rates, selects the winning option, and applies that selection to the open order UI.
 
-The current source/runtime version in this branch is `2.0.8`. There is no build step or test suite in-repo. The checked-in JavaScript files are runtime files loaded directly by Chrome.
+The current source/runtime version in this branch is `2.1.0`. There is no build step. The checked-in JavaScript files are runtime files loaded directly by Chrome, and focused regression tests run with Node's built-in test runner.
 
 ## Read First
 
@@ -28,11 +28,13 @@ Read the docs in this order:
   - `skipAlreadySelected`
 - Shows all supported service variants in the popup under carrier-grouped service toggles.
 - Provides a dedicated `UPS® Ground (UPS) - Michaels` popup toggle for the Michaels `ups ground` store override.
+- Routes Michaels `UPS SurePost` requests by total order weight: under 16 oz → `UPS Ground Saver Less than 1 lb`, 16 oz or more → `UPS Ground Saver 1 lb or Greater`, both billed to the UPS - Michaels account. ShipStation ServiceIDs: 90 (Less than 1 lb) and 91 (1 lb or Greater).
 - Shows inline info badges for conditional service toggles that need extra context.
 - Shows collapsible popup service notes explaining enabled/disabled service behavior, Michaels overrides, Amazon Shipping eligibility, and USPS Priority Mail narrowing.
 - Hooks ShipStation AJAX lifecycle events to trigger rating and selection flows.
 - Builds candidate services from dimensions + requested-service text + country + residential/commercial + store-specific overrides.
-- Skips already-correct selections when `skipAlreadySelected` is enabled: deterministic direct selections can skip before quoting, and cheapest-rate flows skip the final apply step after rates confirm the current selection is already the winner.
+- Skips already-correct deterministic direct selections when `skipAlreadySelected` is enabled and the current service, package, provider, carrier, dimensions, and required bill-to account can all be proved from the form.
+- Always finalizes normal cheapest-rate winners with an uncached `/api/orders/updaterates` request and re-synchronizes the ShipStation service control, even when it already displays the winning service.
 - Includes `Amazon Shipping Ground(On and Off Amazon)` for domestic non-expedited requested-service scenarios, except when `StoreName` contains `walmart`.
 - Filters out disabled service toggles before rate requests, winner selection, and store overrides.
 - Fetches and caches candidate rates, chooses the winner, and applies the selected service/package in the shipment UI.
@@ -61,6 +63,7 @@ Read the docs in this order:
 | `src/main.js` | Runtime coordinator for message handling and AJAX hooks |
 | `popup.html` | Popup markup |
 | `popup.js` | Popup settings persistence and toggle wiring |
+| `tests/engine.test.js` | Node regression coverage for final-winner synchronization and mismatched final responses |
 | `images/` | Extension icons |
 | `fwd-chrome-2.0.1.zip` | Latest packaged release artifact currently checked into git |
 
@@ -77,6 +80,7 @@ Read the docs in this order:
 - `manifest.json` uses host permission `https://*.shipstation.com/*`, but content script matching is still scoped to `https://ss4.shipstation.com/*`.
 - Service toggle state defaults to enabled when `enabledServices` is missing entries in `chrome.storage.sync`.
 - Already-correct selection skipping defaults to enabled when `skipAlreadySelected` is missing in `chrome.storage.sync`.
+- Candidate rate requests use isolated request copies; normal cheapest-rate flows always make the confirmed winner the final uncached rate request.
 
 ## Installation And Use
 
@@ -93,9 +97,15 @@ Read the docs in this order:
 
 If you need a packaged artifact from this repo, the latest checked-in zip is `fwd-chrome-2.0.1.zip`.
 
+Run the focused regression tests with:
+
+```sh
+node --test tests/engine.test.js
+```
+
 ## Current Constraints
 
-- No automated tests.
+- Automated coverage is currently limited to focused engine regression tests.
 - No lint/format/build automation in the repository.
 - Some manifest permissions appear unused by current runtime code (`contentSettings`, `contextMenus`, `notifications`).
 - Packaged zip still contains `__MACOSX` entries, so packaging is not yet clean or automated.

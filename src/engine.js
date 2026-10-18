@@ -3,6 +3,8 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
 
     var serviceMappings = config.buildMappings();
     var cacheStore = {};
+    var selectionSync = null;
+    var SELECTION_SYNC_WINDOW_MS = 10000;
 
     function logger() {
         if (arguments.length > 1) {
@@ -98,7 +100,9 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
                 (parseInt(service.height, 10) === parseInt(order.Height, 10) || service.height === null);
             var idsMatch =
                 parseInt(order.ServiceID, 10) === parseInt(service.serviceId, 10) &&
-                parseInt(order.RequestedPackageTypeID, 10) === parseInt(service.packageId, 10);
+                parseInt(order.RequestedPackageTypeID, 10) === parseInt(service.packageId, 10) &&
+                parseInt(order.ProviderID, 10) === parseInt(service.providerId, 10) &&
+                parseInt(order.CarrierID, 10) === parseInt(service.carrierId, 10);
 
             if (!dimsMatch || !idsMatch) return;
 
@@ -184,11 +188,6 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         return parseNumber(actual) === parseNumber(expected);
     }
 
-    function optionalNumberMatches(actual, expected) {
-        if (actual == null || actual === '' || expected == null || expected === '') return true;
-        return requiredNumberMatches(actual, expected);
-    }
-
     function getSelectionTarget(service) {
         var target = JSON.parse(JSON.stringify(service));
 
@@ -207,8 +206,8 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
 
         if (!requiredNumberMatches(shipmentState.ServiceID, target.serviceId)) return false;
         if (!requiredNumberMatches(shipmentState.RequestedPackageTypeID, target.packageId)) return false;
-        if (!optionalNumberMatches(shipmentState.ProviderID, target.providerId)) return false;
-        if (!optionalNumberMatches(shipmentState.CarrierID, target.carrierId)) return false;
+        if (target.providerId != null && !requiredNumberMatches(shipmentState.ProviderID, target.providerId)) return false;
+        if (target.carrierId != null && !requiredNumberMatches(shipmentState.CarrierID, target.carrierId)) return false;
         if (target.sellerProviderId && !requiredNumberMatches(shipmentState.SellerProviderID, target.sellerProviderId)) return false;
         if (target.length != null && !requiredNumberMatches(shipmentState.Length, target.length)) return false;
         if (target.width != null && !requiredNumberMatches(shipmentState.Width, target.width)) return false;
@@ -218,7 +217,7 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
     }
 
     function getEnabledStoreOverride(orderData, enabledServices) {
-        var storeOverride = config.getStoreOverride(orderData.StoreName, orderData.RequestedShippingService);
+        var storeOverride = config.getStoreOverride(orderData.StoreName, orderData.RequestedShippingService, orderData);
         if (!storeOverride) return null;
 
         var enabledOverrideServices = storeOverride.filter(function (service) {
@@ -251,7 +250,36 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         return true;
     }
 
-    function applySelection(data, service) {
+    function getOrderIdentity(order) {
+        if (!order) return null;
+        if (order.OrderID != null && order.OrderID !== '') return 'id:' + order.OrderID;
+        if (order.OrderNumber) return 'number:' + order.OrderNumber;
+        return null;
+    }
+
+    function beginSelectionSync(service) {
+        var identity = getOrderIdentity(service && service.order);
+        if (!identity) return;
+
+        selectionSync = {
+            identity: identity,
+            expiresAt: Date.now() + SELECTION_SYNC_WINDOW_MS,
+        };
+    }
+
+    function isSelectionSyncInProgress(requestData) {
+        if (!selectionSync || selectionSync.expiresAt < Date.now()) {
+            selectionSync = null;
+            return false;
+        }
+
+        return selectionSync.identity === getOrderIdentity(
+            requestData && requestData.orderViews && requestData.orderViews[0]
+        );
+    }
+
+    function applySelection(data, service, options) {
+        options = options || {};
         service = JSON.parse(JSON.stringify(service));
 
         if (!(service && service.order && ui.currentlyViewingSameOrder(service.order.OrderNumber))) return;
@@ -259,7 +287,10 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         var $c = ui.getContainer();
         ui.setWip();
 
-        if (parseInt($c.find('[name="ServiceID"]').val(), 10) !== parseInt(service.serviceId, 10)) {
+        if (options.forceServiceChange) beginSelectionSync(service);
+
+        if (options.forceServiceChange ||
+            parseInt($c.find('[name="ServiceID"]').val(), 10) !== parseInt(service.serviceId, 10)) {
             $c.find('[name="ServiceID"]').val(service.serviceId).trigger('change');
         }
 
@@ -270,20 +301,19 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
 
             if (parseInt($c.find('[name="RequestedPackageTypeID"]').val(), 10) !== parseInt(service.packageId, 10)) {
                 $c.find('[name="RequestedPackageTypeID"]').val(service.packageId).trigger('change');
-            } else {
-                setTimeout(function () {
-                    if (service.when_cheapest && service.custom !== true) {
-                        if (service.when_cheapest.length != null) $c.find('[name="LengthIn"]').val(service.length).change();
-                        if (service.when_cheapest.width != null)  $c.find('[name="WidthIn"]').val(service.width).change();
-                        if (service.when_cheapest.height != null) $c.find('[name="HeightIn"]').val(service.height).change();
-                        return;
-                    }
-                    logger('Cheapest set: ' + service.service + ' - ' + service.package + ' @ ' + service.price, service);
-                    ui.showCheckmark($c);
-                    ui.hideProcessing();
-                    ui.removeWip();
-                }, 1000);
             }
+
+            setTimeout(function () {
+                if (service.when_cheapest && service.custom !== true) {
+                    if (service.when_cheapest.length != null) $c.find('[name="LengthIn"]').val(service.length).change();
+                    if (service.when_cheapest.width != null)  $c.find('[name="WidthIn"]').val(service.width).change();
+                    if (service.when_cheapest.height != null) $c.find('[name="HeightIn"]').val(service.height).change();
+                }
+                logger('Cheapest set: ' + service.service + ' - ' + service.package + ' @ ' + service.price, service);
+                ui.showCheckmark($c);
+                ui.hideProcessing();
+                ui.removeWip();
+            }, 1000);
 
             if(service.sellerProviderId){
                 setTimeout(function () {
@@ -296,33 +326,64 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         }, 2000);
     }
 
-    async function fetchRate(data, service) {
-        data.lowPriority = false;
-        data.orderViews[0].ServiceID = service.serviceId;
-        data.orderViews[0].RequestedPackageTypeID = service.packageId;
-        data.orderViews[0].ProviderID = service.providerId;
-        data.orderViews[0].CarrierID = service.carrierId;
-        data.orderViews[0].Rate = 0;
-        data.orderViews[0].RateError = null;
-        data.orderViews[0].RatingRequestPending = false;
-        data.orderViews[0].UpdatedRate = true;
+    function buildRateRequest(data, service) {
+        var request = JSON.parse(JSON.stringify(data));
+        var order = request.orderViews[0];
 
-        Object.keys(config.COMMON_FIELDS).forEach(function (f) { data.orderViews[0][f] = config.COMMON_FIELDS[f]; });
-        var carrierFields = config.CARRIER_FIELDS[data.orderViews[0].CarrierID];
-        if (carrierFields) Object.keys(carrierFields).forEach(function (f) { data.orderViews[0][f] = carrierFields[f]; });
+        request.lowPriority = false;
+        order.ServiceID = service.serviceId;
+        order.RequestedPackageTypeID = service.packageId;
+        order.ProviderID = service.providerId;
+        order.CarrierID = service.carrierId;
+        if (service.length != null) order.Length = service.length;
+        if (service.width != null) order.Width = service.width;
+        if (service.height != null) order.Height = service.height;
+        order.Rate = 0;
+        order.RateError = null;
+        order.RatingRequestPending = false;
+        order.UpdatedRate = true;
 
-        var res = cacheGet(data);
+        Object.keys(config.COMMON_FIELDS).forEach(function (f) { order[f] = config.COMMON_FIELDS[f]; });
+        var carrierFields = config.CARRIER_FIELDS[order.CarrierID];
+        if (carrierFields) Object.keys(carrierFields).forEach(function (f) { order[f] = carrierFields[f]; });
+
+        return request;
+    }
+
+    async function fetchRate(data, service, options) {
+        options = options || {};
+
+        var request = buildRateRequest(data, service);
+        var res = options.forceRefresh ? null : cacheGet(request);
         if (!res) {
             res = await fetch('https://ss4.shipstation.com/api/orders/updaterates', {
                 headers: { accept: 'application/json', 'content-type': 'application/json; charset=UTF-8' },
-                body: JSON.stringify(data), method: 'POST', credentials: 'include',
+                body: JSON.stringify(request), method: 'POST', credentials: 'include',
             });
             res = await res.json();
-            logger('Fetched rate for ' + service.service + '(' + res.orders[0].ServiceID + ') / ' +
-                service.package + '(' + res.orders[0].RequestedPackageTypeID + ')', data, res);
+            var logPrefix = options.finalize ? 'Finalized winning rate for ' : 'Fetched rate for ';
+            logger(logPrefix + service.service + '(' + res.orders[0].ServiceID + ') / ' +
+                service.package + '(' + res.orders[0].RequestedPackageTypeID + ')', request, res);
         }
-        cacheSet(data, res);
+        cacheSet(request, res);
         return res;
+    }
+
+    async function finalizeWinningService(data, service) {
+        var finalized = getSelectionTarget(service);
+        var response = await fetchRate(data, finalized, { forceRefresh: true, finalize: true });
+
+        delete finalized.order;
+        delete finalized.price;
+        delete finalized.deliveryTime;
+
+        setRateFromResponse(response, [finalized]);
+
+        if (!finalized.order || !(finalized.price > 0)) {
+            throw new Error('ShipStation did not confirm the winning service, account, and rate.');
+        }
+
+        return finalized;
     }
     
 
@@ -335,7 +396,7 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
 
         var order = requestData.orderViews[0];
 
-        var storeOverride = config.getStoreOverride(order.StoreName, order.RequestedShippingService);
+        var storeOverride = config.getStoreOverride(order.StoreName, order.RequestedShippingService, order);
 
         if (storeOverride) {
             var overrideService = getEnabledStoreOverride(order, enabledServices);
@@ -402,13 +463,20 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         var cheapest = selectCheapest(services);
 
         if (cheapest && cheapest.price > 0 && cheapest.order && ui.currentlyViewingSameOrder(cheapest.order.OrderNumber)) {
-            ui.clearCheapest(true);
-            ui.showCheapestBanner(ui.getContainer(), cheapest);
-            if (options.skipAlreadySelected && serviceMatchesCurrentSelection(cheapest)) {
-                markAlreadySelected(cheapest, true);
+            var finalizedCheapest;
+
+            try {
+                finalizedCheapest = await finalizeWinningService(requestData, cheapest);
+            } catch (error) {
+                ui.clearCheapest(false);
+                ui.hideProcessing();
+                console.error('Winning service finalization failed.', error, cheapest);
                 return;
             }
-            applySelection(requestData, cheapest);
+
+            ui.clearCheapest(true);
+            ui.showCheapestBanner(ui.getContainer(), finalizedCheapest);
+            applySelection(requestData, finalizedCheapest, { forceServiceChange: true });
         } else {
             ui.clearCheapest(false);
             ui.hideProcessing();
@@ -428,6 +496,7 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         rateShop:           rateShop,
         hasMappingForSize:  hasMappingForSize,
         skipAlreadySelectedDirectSelection: skipAlreadySelectedDirectSelection,
+        isSelectionSyncInProgress: isSelectionSyncInProgress,
         logger:             logger,
     };
 

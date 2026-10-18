@@ -233,8 +233,9 @@
     <p class="help-copy">Checked services are eligible for rate-shopping or matching store overrides. Unchecked services are skipped until they are turned back on.</p>
     <ul class="help-list">
         <li><strong>Michaels:</strong> <code>UPS® Ground (UPS) - Michaels</code> controls only Michaels orders requesting <code>ups ground</code>; regular <code>UPS® Ground (UPS)</code> remains separate.</li>
+        <li><strong>Michaels SurePost:</strong> orders requesting <code>UPS SurePost</code> use <code>UPS Ground Saver Less than 1 lb</code> under 16 oz, or <code>UPS Ground Saver 1 lb or Greater</code> at 16 oz and up, billed to UPS - Michaels.</li>
         <li><strong>Store overrides:</strong> Michaels <code>ups ground</code> and <code>ups ground saver</code> apply directly when their matching service toggle is enabled. If disabled, normal rate-shopping is used.</li>
-        <li><strong>Skip already-correct:</strong> when enabled, matching selections are left alone if service, package, dimensions, and bill-to account are already correct.</li>
+        <li><strong>Skip already-correct:</strong> when enabled, matching direct store overrides can be left alone when service, package, dimensions, provider, carrier, and bill-to account are already correct. Normal cheapest-rate winners are always reconfirmed before labeling.</li>
         <li><strong>Amazon Shipping:</strong> used only for domestic non-expedited requests and skipped for Walmart store orders.</li>
         <li><strong>USPS Priority Mail:</strong> requested USPS Priority Mail orders are narrowed to USPS Priority Mail candidates.</li>
     </ul>

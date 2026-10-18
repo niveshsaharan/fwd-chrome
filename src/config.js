@@ -31,7 +31,28 @@ window.FWD.config = (function (serviceCatalog) {
         weight_oz_between: function (d, min, max) {
             return d.Weight >= min && d.Weight <= max && d.WeightUnitOfMeasure === 'Ounce';
         },
+        // Total order weight converted to ounces (handles Ounce/Pound/Gram/Kilogram).
+        // Returns false when the weight is missing so the rule never guesses.
+        weight_oz_lt: function (d, max) {
+            var oz = toOunces(d);
+            return oz != null && oz < max;
+        },
+        weight_oz_gte: function (d, min) {
+            var oz = toOunces(d);
+            return oz != null && oz >= min;
+        },
     };
+
+    function toOunces(d) {
+        if (!d || d.Weight === null || d.Weight === undefined || d.Weight === '') return null;
+        var w = parseFloat(d.Weight);
+        if (isNaN(w)) return null;
+        var unit = String(d.WeightUnitOfMeasure || 'Ounce').toLowerCase().trim();
+        if (unit.indexOf('kilo') === 0 || unit === 'kg' || unit === 'kgs') return w * 35.27396195;
+        if (unit.indexOf('gram') === 0 || unit === 'g' || unit === 'gr') return w * 0.03527396195;
+        if (unit.indexOf('pound') === 0 || unit === 'lb' || unit === 'lbs') return w * 16;
+        return w; // Ounce / oz / unspecified (ShipStation default)
+    }
 
     function cond(fn) {
         return { 'function': fn, args: Array.prototype.slice.call(arguments, 1) };
@@ -77,6 +98,9 @@ window.FWD.config = (function (serviceCatalog) {
         fedexExpSaverPak:  { service: 'FedEx Express Saver',                 serviceId: 54,    packageId: 505, providerId: 4,   carrierId: 4,   conditions: [NOT60] },
         upsGround:         { service: 'UPS® Ground (UPS)',                   serviceId: 26,    packageId: 3,   providerId: 3,   carrierId: 3,   conditions: [NOT60] },
         upsGroundSS:       { service: 'UPS® Ground (UPS by ShipStation)',    serviceId: 10301, packageId: 3,   providerId: 103, carrierId: 3,   conditions: [NOT60] },
+        // UPS Ground Saver weight-split services on the UPS account (ShipStation ServiceIDs 90 / 91).
+        upsGroundSaverLt1: { service: 'UPS Ground Saver Less than 1 lb',      serviceId: 90,    packageId: 3,   providerId: 3,   carrierId: 3,   conditions: [] },
+        upsGroundSaverGe1: { service: 'UPS Ground Saver 1 lb or Greater',     serviceId: 91,    packageId: 3,   providerId: 3,   carrierId: 3,   conditions: [] },
     };
 
     function svc(key, l, w, h, overrides) {
@@ -101,8 +125,29 @@ window.FWD.config = (function (serviceCatalog) {
     // services are eligible (normal rate-shop is skipped entirely).
     // `match` is compared case-insensitively against RequestedShippingService.
     // `services` is the array of service objects to use instead.
+    // Optional `conditions` must ALL pass against the order (e.g. weight).
+    // Rules are checked top to bottom; the first match wins.
+    var MICHAELS_UPS = { sellerProviderId: 1650146, providerId: 3, accountType: 'other-account' };
+    function michaels(extra) {
+        var o = JSON.parse(JSON.stringify(MICHAELS_UPS));
+        Object.keys(extra || {}).forEach(function (k) { o[k] = extra[k]; });
+        return o;
+    }
+
     var STORE_RULES = {
         'Michaels': [
+            {
+                // "UPS SurePost (rate class unspecified)" etc., under 16 oz
+                match: 'ups surepost',
+                conditions: [cond('weight_oz_lt', 16)],
+                services: [svc('upsGroundSaverLt1', undefined, undefined, undefined, michaels({toggleId: 'michaels_ups_ground_saver_lt1lb_package'}))],
+            },
+            {
+                // SurePost, 16 oz or more
+                match: 'ups surepost',
+                conditions: [cond('weight_oz_gte', 16)],
+                services: [svc('upsGroundSaverGe1', undefined, undefined, undefined, michaels({toggleId: 'michaels_ups_ground_saver_ge1lb_package'}))],
+            },
             {
                 match: 'ups ground',
                 exact: true,
@@ -116,7 +161,7 @@ window.FWD.config = (function (serviceCatalog) {
         ],
     };
 
-    function getStoreOverride(storeName, requestedService) {
+    function getStoreOverride(storeName, requestedService, order) {
         var rules = STORE_RULES[storeName];
         if (!rules) return null;
         var req = (requestedService || '').toLowerCase().trim();
@@ -124,6 +169,9 @@ window.FWD.config = (function (serviceCatalog) {
             var rule = rules[i];
             var matchVal = rule.match.toLowerCase();
             var matched = rule.exact ? (req === matchVal) : req.includes(matchVal);
+            if (matched && rule.conditions && rule.conditions.length) {
+                matched = rule.conditions.every(function (c) { return evaluate(c, order || {}); });
+            }
             if (matched) return rule.services.map(function (s) { return JSON.parse(JSON.stringify(s)); });
         }
         return null;
