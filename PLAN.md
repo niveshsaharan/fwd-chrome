@@ -6,7 +6,7 @@ This is a recommended engineering plan for the current `v2` codebase.
 
 Priority: high
 
-Current risk is concentrated in `src/config.js` and `src/engine.js` with no test coverage.
+Current risk is concentrated in `src/config.js` and `src/engine.js`, which have only focused coverage in `tests/michaels.test.js` and `tests/engine.test.js`.
 
 Recommended next step:
 
@@ -24,11 +24,11 @@ Expected payoff:
 
 Priority: high
 
-Store-specific override behavior now exists via `STORE_RULES`, but has no dedicated validation path.
+Store-specific override behavior exists via `STORE_RULES`. `tests/michaels.test.js` covers `getStoreOverride()` store-name contains matching and the Michaels requested-service rules, but there is no guardrail on which store names a key can match.
 
 Recommended next step:
 
-- add tests for exact/contains match behavior in `getStoreOverride`
+- decide whether substring store-key matching needs a tighter policy (word boundaries or an explicit store-name allowlist): today any `StoreName` containing `michaels`, such as `Michaelson Crafts`, receives Michaels overrides billed to seller provider `1650146`
 - verify override apply flow including `sellerProviderId` bill-to selection
 - verify store-specific toggle IDs such as `michaels_ups_ground_package` do not disable or enable similarly named standard services
 - add regression tests for `skipAlreadySelected` so already-correct selections skip only when service, package, dimensions, and required bill-to account all match

@@ -121,9 +121,15 @@ window.FWD.config = (function (serviceCatalog) {
     }
 
     // ========== STORE-SPECIFIC RULES ==========
+    // Each STORE_RULES key is matched case-insensitively as a substring of the
+    // order's StoreName, so 'Michaels' also matches 'michaels' or
+    // 'Michaels Marketplace'. Keys are checked in definition order and the
+    // first key found in the store name is used, so list more specific keys
+    // before broader ones.
     // When a store+requestedService combo matches a rule, ONLY the listed
     // services are eligible (normal rate-shop is skipped entirely).
-    // `match` is compared case-insensitively against RequestedShippingService.
+    // `match` is compared case-insensitively against RequestedShippingService
+    // (substring match, or whole-string match when `exact: true`).
     // `services` is the array of service objects to use instead.
     // Optional `conditions` must ALL pass against the order (e.g. weight).
     // Rules are checked top to bottom; the first match wins.
@@ -161,8 +167,19 @@ window.FWD.config = (function (serviceCatalog) {
         ],
     };
 
+    function findStoreRules(storeName) {
+        var store = String(storeName || '').toLowerCase();
+        var keys = Object.keys(STORE_RULES);
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i].toLowerCase().trim();
+            // Skip blank keys: an empty substring would match every store.
+            if (key && store.includes(key)) return STORE_RULES[keys[i]];
+        }
+        return null;
+    }
+
     function getStoreOverride(storeName, requestedService, order) {
-        var rules = STORE_RULES[storeName];
+        var rules = findStoreRules(storeName);
         if (!rules) return null;
         var req = (requestedService || '').toLowerCase().trim();
         for (var i = 0; i < rules.length; i++) {

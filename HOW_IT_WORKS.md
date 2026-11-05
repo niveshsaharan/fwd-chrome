@@ -78,7 +78,7 @@ Modules publish into `window.FWD`:
 
 1. Clone base mappings for each call (`2.0.1` fix) so per-request mutations do not leak across requests.
 2. Read active order from `requestData.orderViews[0]`.
-3. Check `STORE_RULES` override using store name + requested shipping service.
+3. Check `STORE_RULES` override: `config.getStoreOverride()` picks the first store key contained in `StoreName` (case-insensitive), then the first rule whose requested-shipping-service match and conditions pass.
 4. If override matches and at least one override service toggle is enabled, optionally skip when `skipAlreadySelected` is enabled and the current selected service/package/required bill-to account already matches.
 5. If the override still needs work, skip normal rate comparison and directly apply the enabled override service.
 6. Otherwise, build candidate list from size mapping + wildcard `***` mapping.
@@ -91,10 +91,20 @@ Modules publish into `window.FWD`:
 
 ## Store Override Short-Circuit
 
-`src/config.js` currently defines `STORE_RULES` for `Michaels` with exact matches:
+`src/config.js` currently defines `STORE_RULES` with one store key, `Michaels`.
 
-- `ups ground`
-- `ups ground saver`
+Store selection (`findStoreRules()` inside `getStoreOverride()`) lowercases the order's `StoreName` and each store key, then uses the first key, in definition order, that the store name contains. `Michaels Marketplace`, `michaels`, and `Shop - Michaels` therefore all resolve to the `Michaels` rules. Blank keys are ignored so they cannot match every store. Before `2.1.1` this was an exact, case-sensitive object-key lookup (`STORE_RULES[storeName]`).
+
+The `Michaels` rules are then checked top to bottom against the lowercased, trimmed `RequestedShippingService`:
+
+- contains `ups surepost` + `weight_oz_lt` 16 -> `UPS Ground Saver Less than 1 lb` (toggle `michaels_ups_ground_saver_lt1lb_package`)
+- contains `ups surepost` + `weight_oz_gte` 16 -> `UPS Ground Saver 1 lb or Greater` (toggle `michaels_ups_ground_saver_ge1lb_package`)
+- exact `ups ground` -> `UPS® Ground (UPS)` (toggle `michaels_ups_ground_package`)
+- exact `ups ground saver` -> `UPS Ground Saver` (toggle `ups_ground_saver_package`)
+
+`ups ground` must stay an exact match: as a substring match it would also capture `ups ground saver` requests, because it is checked first.
+
+Because `engine.rateShop()` and `engine.skipAlreadySelectedDirectSelection()` both resolve overrides through `getStoreOverride()`, the contains-based store matching applies to the `/api/orders/updaterates` flow and to the autorun preflight, which reads `StoreName` from the open order form via `ui.getCurrentShipmentState()`.
 
 For these matches the engine bypasses normal rate-shopping and applies predefined service objects only when those override services are enabled in `enabledServices`. The apply flow also supports bill-to account switching using `sellerProviderId` in override service data.
 
@@ -135,7 +145,8 @@ WIP state adds CSS classes to lock interaction and display working status while 
 
 ## Current Technical Debt
 
-- No automated tests for config rules or selection behavior.
+- Automated coverage is limited to `tests/michaels.test.js` (`getStoreOverride()` store-name and Michaels rule matching) and `tests/engine.test.js` (focused engine regressions); condition primitives and `buildMappings()` outputs are not directly tested.
+- Store-key matching is substring-based, so an unrelated store name that happens to contain `michaels` would receive Michaels overrides billed to seller provider `1650146`.
 - Strong coupling to ShipStation selectors and endpoint behavior.
 - `window.fwdPaused` is referenced but not defined in-repo.
 - Packaging remains manual and release zip includes `__MACOSX` artifacts.

@@ -9,6 +9,17 @@ Two notes:
 
 ## Current Release Line
 
+### 2.1.1 - 2026-11-05
+
+Commit message headline: `2.1.1: match store rules by store name contains instead of exact key`
+
+- Changed `STORE_RULES` store matching in `src/config.js` `getStoreOverride()` from an exact, case-sensitive `StoreName` key lookup to a case-insensitive contains check, so the `Michaels` rules now also apply to store names such as `michaels`, `MICHAELS`, `Michaels Marketplace`, and `Shop - Michaels`.
+- The contains check covers every `Michaels` rule (`ups surepost` weight split, `ups ground`, `ups ground saver`) in both `engine.rateShop()` and the autorun `skipAlreadySelected` preflight.
+- Kept requested-service matching unchanged: `ups ground` and `ups ground saver` remain exact requested-service matches.
+- Updated popup Service Notes to say Michaels rules apply to any store name containing `Michaels`.
+- Added store-name matching regression tests to `tests/michaels.test.js`.
+- Bumped manifest version to `2.1.1`.
+
 ### 2.0.8 - 2026-04-30
 
 Commit message headline: `2.0.8: skip already-correct selections`

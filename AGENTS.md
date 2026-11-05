@@ -98,6 +98,7 @@ When adding shipping logic:
 
 - add or update the matching entry in `src/serviceCatalog.js`
 - prefer template-based additions in `src/config.js`
+- treat each `STORE_RULES` key as a case-insensitive substring of `StoreName`: confirm it cannot match unrelated store names, and list more specific keys before broader ones because the first contained key wins
 - keep IDs and conditions explicit and reviewable
 - add/adjust tests for changed rule paths
 - document behavior impact in `FEATURES.md`

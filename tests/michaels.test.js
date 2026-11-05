@@ -53,6 +53,45 @@ test('existing UPS Ground / Ground Saver rules unchanged', () => {
     assert.equal(cfg.getStoreOverride('Michaels', 'Standard', { Weight: 10 }), null);
 });
 
+const ounces = (weight) => ({ Weight: weight, WeightUnitOfMeasure: 'Ounce' });
+
+test('store rules apply when the store name contains "Michaels" (any case)', () => {
+    [
+        'Michaels',
+        'michaels',
+        'MICHAELS',
+        ' Michaels ',
+        'Michaels Marketplace',
+        'Michaels.com',
+        'Shop - Michaels',
+    ].forEach((storeName) => {
+        const r = cfg.getStoreOverride(storeName, 'UPS Ground', ounces(10));
+        assert.ok(r, `expected Michaels rules for store ${JSON.stringify(storeName)}`);
+        assert.equal(r[0].toggleId, 'michaels_ups_ground_package');
+        assert.equal(r[0].sellerProviderId, 1650146);
+    });
+});
+
+test('store rules do not apply when the store name does not contain "Michaels"', () => {
+    ['Walmart', 'Amazon.com', 'Etsy', '', undefined, null].forEach((storeName) => {
+        assert.equal(
+            cfg.getStoreOverride(storeName, 'UPS Ground', ounces(10)),
+            null,
+            `expected no store override for store ${JSON.stringify(storeName)}`
+        );
+    });
+});
+
+test('contains-matched store keeps every Michaels rule and exact requested-service matching', () => {
+    const store = 'Michaels Marketplace';
+    assert.equal(cfg.getStoreOverride(store, 'UPS SurePost (rate class unspecified)', ounces(8))[0].serviceId, 90);
+    assert.equal(cfg.getStoreOverride(store, 'UPS SurePost (rate class unspecified)', ounces(24))[0].serviceId, 91);
+    assert.equal(cfg.getStoreOverride(store, 'UPS Ground', ounces(10))[0].service, 'UPS® Ground (UPS)');
+    // `ups ground` must stay an exact requested-service match, or it would swallow `ups ground saver`.
+    assert.equal(cfg.getStoreOverride(store, 'UPS Ground Saver', ounces(10))[0].service, 'UPS Ground Saver');
+    assert.equal(cfg.getStoreOverride(store, 'Standard', ounces(10)), null);
+});
+
 test('SurePost services use ShipStation IDs 90 / 91 on the UPS account', () => {
     const lt = pick('UPS SurePost (rate class unspecified)', 8);
     const ge = pick('UPS SurePost (rate class unspecified)', 24);

@@ -36,7 +36,7 @@ This file describes the extension's current behavior as implemented in the `v2` 
   - Closed by default whenever the popup opens.
   - Explains that checked services are eligible and unchecked services are skipped.
   - Explains that already-correct selections can be left alone when `skipAlreadySelected` is enabled.
-  - Calls out Michaels UPS Ground override behavior, direct store override behavior, Amazon Shipping domestic/non-expedited/Walmart behavior, and USPS Priority Mail narrowing.
+  - Calls out Michaels store-name matching (any store name containing `Michaels`), Michaels UPS Ground and SurePost override behavior, direct store override behavior, Amazon Shipping domestic/non-expedited/Walmart behavior, and USPS Priority Mail narrowing.
 
 ## Where The Extension Runs
 
@@ -111,10 +111,16 @@ Additional global rule controls:
 
 ## Store-Specific Overrides
 
-- `STORE_RULES` currently defines one store: `Michaels`.
-- For exact requested-service matches:
-  - `ups ground` applies `UPS® Ground (UPS)` and is controlled by the popup toggle `UPS® Ground (UPS) - Michaels`.
-  - `ups ground saver` applies `UPS Ground Saver` and is controlled by the popup toggle `UPS Ground Saver`.
+- `STORE_RULES` currently defines one store key: `Michaels`.
+- A store key matches when the order's `StoreName` contains it, case-insensitively. `Michaels`, `michaels`, `MICHAELS`, `Michaels Marketplace`, and `Shop - Michaels` all use the `Michaels` rules; store names that do not contain `michaels`, or are empty, get no store override.
+- Because matching is substring-based, any store name containing `michaels` (for example `Michaelson Crafts`) also receives the Michaels rules, including billing to seller provider `1650146`.
+- Store keys are checked in definition order and the first key found in `StoreName` is used.
+- Requested-service rules for the matched store are checked top to bottom, and the first rule whose requested-service match and conditions pass wins:
+  - requested service containing `ups surepost` with total order weight under 16 oz applies `UPS Ground Saver Less than 1 lb` and is controlled by the popup toggle `UPS Ground Saver Less than 1 lb - Michaels`.
+  - requested service containing `ups surepost` with total order weight of 16 oz or more applies `UPS Ground Saver 1 lb or Greater` and is controlled by the popup toggle `UPS Ground Saver 1 lb or Greater - Michaels`.
+  - SurePost weight is converted to ounces from `Ounce`, `Pound`, `Gram`, or `Kilogram`; a missing weight matches neither SurePost rule.
+  - exact requested service `ups ground` applies `UPS® Ground (UPS)` and is controlled by the popup toggle `UPS® Ground (UPS) - Michaels`.
+  - exact requested service `ups ground saver` applies `UPS Ground Saver` and is controlled by the popup toggle `UPS Ground Saver`.
 - The engine bypasses normal cheapest-rate comparison and directly applies the configured service only when that override service is enabled.
 - When every override service for the match is disabled, the engine falls back to normal rate-shopping.
 - Override services include `sellerProviderId` (`1650146`) and trigger bill-to account selection logic in apply flow.
@@ -217,5 +223,5 @@ Note: runtime matching still uses the exact service display strings in `src/conf
 
 - No options page, API, or external rule config.
 - Rules are hard-coded in JavaScript under `src/config.js`.
-- Store overrides are static and currently only defined for `Michaels`.
+- Store overrides are static and currently only defined for store names containing `Michaels`.
 - Content script target remains ShipStation `ss4`.

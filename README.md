@@ -2,7 +2,7 @@
 
 This repository contains a Chrome extension that runs inside ShipStation and rate-shops shipments using hard-coded business rules. It evaluates eligible carrier/service/package combinations, fetches rates, selects the winning option, and applies that selection to the open order UI.
 
-The current source/runtime version in this branch is `2.1.0`. There is no build step. The checked-in JavaScript files are runtime files loaded directly by Chrome, and focused regression tests run with Node's built-in test runner.
+The current source/runtime version in this branch is `2.1.1`. There is no build step. The checked-in JavaScript files are runtime files loaded directly by Chrome, and focused regression tests run with Node's built-in test runner.
 
 ## Read First
 
@@ -27,6 +27,7 @@ Read the docs in this order:
   - `enabledServices`
   - `skipAlreadySelected`
 - Shows all supported service variants in the popup under carrier-grouped service toggles.
+- Applies store-specific overrides when the order's `StoreName` contains a `STORE_RULES` key (case-insensitive), so the `Michaels` rules also cover store names such as `michaels` or `Michaels Marketplace`.
 - Provides a dedicated `UPS® Ground (UPS) - Michaels` popup toggle for the Michaels `ups ground` store override.
 - Routes Michaels `UPS SurePost` requests by total order weight: under 16 oz → `UPS Ground Saver Less than 1 lb`, 16 oz or more → `UPS Ground Saver 1 lb or Greater`, both billed to the UPS - Michaels account. ShipStation ServiceIDs: 90 (Less than 1 lb) and 91 (1 lb or Greater).
 - Shows inline info badges for conditional service toggles that need extra context.
@@ -64,6 +65,7 @@ Read the docs in this order:
 | `popup.html` | Popup markup |
 | `popup.js` | Popup settings persistence and toggle wiring |
 | `tests/engine.test.js` | Node regression coverage for final-winner synchronization and mismatched final responses |
+| `tests/michaels.test.js` | Node regression coverage for `getStoreOverride()` store-name contains matching and the Michaels SurePost / UPS Ground / UPS Ground Saver rules |
 | `images/` | Extension icons |
 | `fwd-chrome-2.0.1.zip` | Latest packaged release artifact currently checked into git |
 
@@ -100,12 +102,12 @@ If you need a packaged artifact from this repo, the latest checked-in zip is `fw
 Run the focused regression tests with:
 
 ```sh
-node --test tests/engine.test.js
+node --test tests/engine.test.js tests/michaels.test.js
 ```
 
 ## Current Constraints
 
-- Automated coverage is currently limited to focused engine regression tests.
+- Automated coverage is currently limited to focused engine regression tests and `getStoreOverride()` store-rule tests.
 - No lint/format/build automation in the repository.
 - Some manifest permissions appear unused by current runtime code (`contentSettings`, `contextMenus`, `notifications`).
 - Packaged zip still contains `__MACOSX` entries, so packaging is not yet clean or automated.
