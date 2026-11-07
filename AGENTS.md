@@ -101,6 +101,7 @@ When adding shipping logic:
 - treat each `STORE_RULES` key as a case-insensitive substring of `StoreName`: confirm it cannot match unrelated store names, and list more specific keys before broader ones because the first contained key wins
 - keep IDs and conditions explicit and reviewable
 - add/adjust tests for changed rule paths
+- when changing expedited selection (`parseDeliveryDays()`, `select2DayNextDay()` in `src/engine.js`), add scenarios to `tests/expedited.test.js`; day counts depend on the current date, so that file pins today's date and the `America/New_York` time zone
 - document behavior impact in `FEATURES.md`
 
 When refactoring:

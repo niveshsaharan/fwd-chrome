@@ -55,7 +55,7 @@ Modules publish into `window.FWD`:
 - `window.FWD.ui`
   - DOM helpers and visual state helpers
 - `window.FWD.engine`
-  - `rateShop`, `hasMappingForSize`, `skipAlreadySelectedDirectSelection`, `logger`
+  - `rateShop`, `hasMappingForSize`, `skipAlreadySelectedDirectSelection`, `isSelectionSyncInProgress`, `logger`
 
 `src/main.js` consumes these interfaces and wires page events.
 
@@ -73,6 +73,8 @@ Modules publish into `window.FWD`:
     - `/api/orders/updaterates`
     - `/api/orders/BulkUpdate`
     - `/api/shipments/List?orderID=...`
+
+While the extension is enabled, every `/api/orders/updaterates` response re-runs `engine.rateShop()`, except responses for the same order within 10 seconds after the tool forces its winner into the service control (`engine.isSelectionSyncInProgress()`). That includes responses caused by a packer changing the service by hand, so a manual service choice is re-shopped and replaced by the tool's winner.
 
 ## Engine Flow (`engine.rateShop`)
 
@@ -127,7 +129,8 @@ Cache key is based on:
 
 Selection paths:
 
-- Expedited (`2-day delivery` / `next day delivery`): compares qualifying FedEx services with computed delivery-day values.
+- Expedited (`2-day delivery` / `next day delivery`): `parseDeliveryDays()` turns each FedEx `DeliveryTime` estimate (`Saturday 11/7 by 11:59 PM`, `Tomorrow by 8:00 PM`) into a day count: calendar days from today's local date to the delivery date (rounded, so a DST day cannot add one), minus weekend days strictly between the two dates (`weekendDaysBetween()`). A January date seen in December rolls into the next year. `select2DayNextDay()` then picks among FedEx services `50`/`51`/`52`/`55` counted at 2 days or less, as described in `FEATURES.md`. Before `2.1.2` the weekend count included the delivery date and today, so a Saturday delivery from Thursday counted as 1 day.
+- The count is recomputed from the response text on every run, including cached responses. The candidate cache (`cacheStore`) lives for the whole page session and is never cleared; only the final winner is re-quoted uncached (`forceRefresh`).
 - Default path: chooses lowest positive price, then uses `PRIORITY_MAP` for tie handling.
 - Disabled service toggles are removed before either selection path runs.
 
@@ -141,11 +144,12 @@ Selection paths:
 - `showCheapestBanner`
 - `showCheckmark`
 
-WIP state adds CSS classes to lock interaction and display working status while rates are being processed.
+WIP state (`ss-fwd-wip` on `<html>`, `ss-wip` on the order container) shows `working...` while rates are being processed and blocks clicks on `#order-grid` (`pointer-events:none`). The ship / `Create Label` button (`.btn-group.ship-btn-group a.btn-success`) only turns grey with `cursor:not-allowed`; it is not click-blocked, so a label can still be created while the tool is working.
 
 ## Current Technical Debt
 
-- Automated coverage is limited to `tests/michaels.test.js` (`getStoreOverride()` store-name and Michaels rule matching) and `tests/engine.test.js` (focused engine regressions); condition primitives and `buildMappings()` outputs are not directly tested.
+- Automated coverage is limited to `tests/michaels.test.js` (`getStoreOverride()` store-name and Michaels rule matching), `tests/engine.test.js` (focused engine regressions), and `tests/expedited.test.js` (next-day / 2-day delivery-day counting and winners); condition primitives and `buildMappings()` outputs are not directly tested.
+- The WIP state does not click-block the ship button, and a manual service change re-runs rate-shopping and replaces the packer's choice (see above).
 - Store-key matching is substring-based, so an unrelated store name that happens to contain `michaels` would receive Michaels overrides billed to seller provider `1650146`.
 - Strong coupling to ShipStation selectors and endpoint behavior.
 - `window.fwdPaused` is referenced but not defined in-repo.

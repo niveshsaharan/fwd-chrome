@@ -205,10 +205,13 @@ Note: runtime matching still uses the exact service display strings in `src/conf
 
 - Filters out disabled service toggles first, then applies service-level conditions and common conditions.
 - Parses rates from ShipStation responses.
-- For expedited requests (`2-day delivery`/`next day delivery`):
-  - computes delivery day count from `DeliveryTime`
-  - adjusts by weekend days
-  - prefers qualified FedEx delivery-time candidates
+- For expedited requests (`2-day delivery`/`next day delivery`), only `FedEx Ground®`, `FedEx Home Delivery®`, `FedEx 2Day®`, and `FedEx Standard Overnight®` (service IDs `50`, `51`, `52`, `55`) can win; other candidates, such as `FedEx Priority Overnight` on next-day requests, are quoted but never selected.
+  - Each candidate's delivery day count comes from its `DeliveryTime` estimate, such as `Saturday 11/7 by 11:59 PM` or `Tomorrow by 8:00 PM`.
+  - The count is the number of calendar days after today up to and including the delivery day, minus weekend days strictly between today and the delivery day. Thursday → Friday and Friday → Monday both count as 1 day; Thursday → Saturday counts as 2, so a Saturday `FedEx Home Delivery®` estimate does not qualify as next day for a Thursday order. Today and the delivery day are never subtracted, even when they fall on a weekend.
+  - The estimate has no year, so a January estimate seen in December is counted into the next year. Days are counted by calendar date, so a daylight-saving change does not add a day.
+  - Only candidates counted at 2 days or less are eligible.
+  - `2-day delivery`: the cheapest eligible candidate wins.
+  - `next day delivery`: when the cheapest eligible candidate is counted at 1 day or less, the cheapest `FedEx Ground®`/`FedEx Home Delivery®` candidate wins if it is counted at 1 day or less, otherwise the cheapest `FedEx Standard Overnight®`; when the cheapest eligible candidate takes 2 days, the fastest eligible candidate wins (the first in candidate order on ties).
 - For non-expedited requests:
   - chooses lowest positive price
   - uses `PRIORITY_MAP` for ties

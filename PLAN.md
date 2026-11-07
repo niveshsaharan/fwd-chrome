@@ -6,12 +6,12 @@ This is a recommended engineering plan for the current `v2` codebase.
 
 Priority: high
 
-Current risk is concentrated in `src/config.js` and `src/engine.js`, which have only focused coverage in `tests/michaels.test.js` and `tests/engine.test.js`.
+Current risk is concentrated in `src/config.js` and `src/engine.js`, which have only focused coverage in `tests/michaels.test.js`, `tests/engine.test.js`, and `tests/expedited.test.js`.
 
 Recommended next step:
 
 - add unit tests for `config.evaluate`, condition primitives, and `buildMappings()` outputs
-- add selection tests for default and expedited branches in `engine`
+- add selection tests for the default cheapest-price branch in `engine` (next-day / 2-day delivery-day counting and winners are covered by `tests/expedited.test.js`)
 - add regression tests for tie-break behavior (`PRIORITY_MAP`)
 
 Expected payoff:
@@ -45,6 +45,9 @@ Recommended next step:
 - centralize selectors/endpoints and add structured failure logs
 - add explicit fallback behavior when key selectors are missing
 - reduce duplicated selector access patterns in UI/apply code paths
+- make the WIP lock real for the ship / `Create Label` button: it only turns grey with `cursor:not-allowed`, so a label can be created mid-rate-shop with whatever service ShipStation holds at that moment. Blocking clicks first needs guaranteed WIP cleanup, because a `rateShop()` that throws (for example a failed `fetch`) currently leaves WIP set
+- decide how manual service changes should behave: every `/api/orders/updaterates` response outside the 10-second selection-sync window re-runs `rateShop()`, so a packer's manual service choice is replaced by the tool's winner
+- expire or scope the candidate rate cache (`cacheStore`): it is never cleared during a page session, so prices and `DeliveryTime` estimates from earlier in the session can drive selection; only the final winner is re-quoted
 
 ## 4. Improve Runtime Observability
 

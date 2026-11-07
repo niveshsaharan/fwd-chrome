@@ -9,6 +9,17 @@ Two notes:
 
 ## Current Release Line
 
+### 2.1.2 - 2026-11-07
+
+Commit message headline: `2.1.2: fix next-day/2-day delivery-day counting for weekend deliveries`
+
+- Fixed expedited delivery-day counting in `src/engine.js` `parseDeliveryDays()`: the weekend count included the delivery date, so `FedEx Home Delivery®` arriving `Saturday 11/7` from Thursday 11/5 counted as 1 day and beat `FedEx Standard Overnight®` for a `Next Day Delivery (Fri, Nov 6, 2026)` order. Only weekend days strictly between today and the delivery date are skipped now, so that order gets `FedEx Standard Overnight®`.
+- The same fix stops a Saturday delivery counting as 2 days for a Wednesday `2-day delivery` order, and stops Saturday/Sunday processing from subtracting today.
+- Fixed January `DeliveryTime` estimates seen in December being parsed into the current year, which gave a negative day count and made them look fastest.
+- Fixed day counting across the November daylight-saving change, which added a day and could leave a `2-day delivery` order with no qualifying service.
+- Added `tests/expedited.test.js`, which runs the real config and engine with a pinned date for next-day and 2-day scenarios.
+- Bumped manifest version to `2.1.2`.
+
 ### 2.1.1 - 2026-11-05
 
 Commit message headline: `2.1.1: match store rules by store name contains instead of exact key`

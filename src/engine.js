@@ -55,9 +55,13 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         });
     }
 
-    function weekendCount(d1, d2) {
-        var a = new Date(d1), b = new Date(d2), count = 0;
-        while (a <= b) {
+    // Weekend days strictly between the ship date and the delivery date. Only
+    // these in-transit weekend days are skipped: the delivery day itself always
+    // counts, so a Saturday delivery from Thursday is 2 days, not next day.
+    function weekendDaysBetween(start, end) {
+        var a = new Date(start), b = new Date(end), count = 0;
+        a.setDate(a.getDate() + 1);
+        while (a < b) {
             var day = a.getDay();
             if (day === 0 || day === 6) count++;
             a.setDate(a.getDate() + 1);
@@ -65,6 +69,8 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         return count;
     }
 
+    // Days from today until a DeliveryTime estimate such as
+    // "Saturday 11/7 by 11:59 PM" or "Tomorrow by 8:00 PM", minus in-transit weekend days.
     function parseDeliveryDays(deliveryTime) {
         if (!deliveryTime) return null;
         var parts = String(deliveryTime).split(' ');
@@ -80,10 +86,15 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         } else {
             var md = parts[1].split('/');
             deliveryDate = new Date(md[0] + '/' + md[1] + '/' + now.getFullYear());
+            // The estimate has no year, so a January date quoted in December is next year.
+            if (today.getMonth() === 11 && deliveryDate.getMonth() === 0) {
+                deliveryDate.setFullYear(deliveryDate.getFullYear() + 1);
+            }
         }
 
-        var rawDays = Math.ceil((deliveryDate - today) / (1000 * 60 * 60 * 24));
-        return rawDays - weekendCount(today, deliveryDate);
+        // Both dates are local midnights; rounding keeps a 25-hour DST day from adding a day.
+        var rawDays = Math.round((deliveryDate - today) / (1000 * 60 * 60 * 24));
+        return rawDays - weekendDaysBetween(today, deliveryDate);
     }
 
     var FEDEX_DELIVERY_IDS = [50, 51, 52, 55];
