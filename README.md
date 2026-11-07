@@ -2,7 +2,7 @@
 
 This repository contains a Chrome extension that runs inside ShipStation and rate-shops shipments using hard-coded business rules. It evaluates eligible carrier/service/package combinations, fetches rates, selects the winning option, and applies that selection to the open order UI.
 
-The current source/runtime version in this branch is `2.1.2`. There is no build step. The checked-in JavaScript files are runtime files loaded directly by Chrome, and focused regression tests run with Node's built-in test runner.
+The current source/runtime version in this branch is `2.1.3`. There is no build step. The checked-in JavaScript files are runtime files loaded directly by Chrome, and focused regression tests run with Node's built-in test runner.
 
 ## Read First
 
@@ -41,6 +41,8 @@ Read the docs in this order:
 - Filters out disabled service toggles before rate requests, winner selection, and store overrides.
 - Fetches and caches candidate rates, chooses the winner, and applies the selected service/package in the shipment UI.
 - Displays in-page status feedback (`working...`, spinner, cheapest banner, checkmark).
+- Locks the open order's `Create Label` button while it shows `working...`, unlocking when the tool finishes, when a rate request fails, or after 20 seconds without progress.
+- Leaves a Service or Package that a packer picked by hand alone for that order, until the packer clicks `Get Quote`.
 
 ## V1 To V2 Migration Note
 
@@ -68,6 +70,8 @@ Read the docs in this order:
 | `tests/engine.test.js` | Node regression coverage for final-winner synchronization and mismatched final responses |
 | `tests/michaels.test.js` | Node regression coverage for `getStoreOverride()` store-name contains matching and the Michaels SurePost / UPS Ground / UPS Ground Saver rules |
 | `tests/expedited.test.js` | Node regression coverage for next-day / 2-day delivery-day counting and winners, running the real config and engine with a pinned date and `America/New_York` time zone |
+| `tests/ui.test.js` | Node coverage for the `Create Label` lock and its 20-second safety timeout in `src/ui.js` |
+| `tests/main.test.js` | Node coverage for `src/main.js` hooks: hand-picked Service/Package control, autorun, and unlock on failed or skipped rate refreshes |
 | `images/` | Extension icons |
 | `fwd-chrome-2.0.1.zip` | Latest packaged release artifact currently checked into git |
 
@@ -104,12 +108,12 @@ If you need a packaged artifact from this repo, the latest checked-in zip is `fw
 Run the focused regression tests with:
 
 ```sh
-node --test tests/engine.test.js tests/michaels.test.js tests/expedited.test.js
+node --test tests/*.test.js
 ```
 
 ## Current Constraints
 
-- Automated coverage is currently limited to focused engine regression tests, `getStoreOverride()` store-rule tests, and next-day / 2-day selection tests.
+- Automated coverage is currently limited to focused engine regression tests, `getStoreOverride()` store-rule tests, next-day / 2-day selection tests, and lock / manual-choice tests, all run against fakes of the ShipStation page rather than live ShipStation.
 - No lint/format/build automation in the repository.
 - Some manifest permissions appear unused by current runtime code (`contentSettings`, `contextMenus`, `notifications`).
 - Packaged zip still contains `__MACOSX` entries, so packaging is not yet clean or automated.

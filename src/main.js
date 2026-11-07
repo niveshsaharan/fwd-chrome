@@ -30,6 +30,62 @@
 
     function isActive() { return !window.fwdPaused && settings.enabled; }
 
+    // ===== A packer's own Service / Package choice =====
+    // When a packer changes either dropdown by hand, later rate refreshes for
+    // that order are left alone, until the packer clicks Get Quote to hand the
+    // order back. Only real user input counts (event.isTrusted): the tool's own
+    // jQuery .val().trigger('change') and .click() never fire these listeners.
+    // A change is tied to its order by the next /api/orders/updaterates request
+    // that carries the chosen value. Keys match engine selection sync.
+    var MANUAL_BIND_WINDOW_MS = 10000;
+    var manualOrders = {};
+    var pendingManual = null;
+    var pendingReshopAt = 0;
+
+    function orderIdentity(requestData) {
+        var order = requestData && requestData.orderViews && requestData.orderViews[0];
+        if (!order) return null;
+        if (order.OrderID != null && order.OrderID !== '') return 'id:' + order.OrderID;
+        if (order.OrderNumber) return 'number:' + order.OrderNumber;
+        return null;
+    }
+
+    document.addEventListener('change', function (e) {
+        var target = e.target;
+        if (!e.isTrusted || !target || typeof target.matches !== 'function') return;
+        if (target.matches('[name="ServiceID"], [name="RequestedPackageTypeID"]')) {
+            pendingManual = { field: target.getAttribute('name'), value: target.value, at: Date.now() };
+        }
+    }, true);
+
+    document.addEventListener('click', function (e) {
+        var target = e.target;
+        if (e.isTrusted && target && typeof target.closest === 'function' && target.closest('.get-quote')) {
+            pendingReshopAt = Date.now();
+        }
+    }, true);
+
+    // Called for each /api/orders/updaterates request; returns true when the
+    // request's order is under the packer's manual control.
+    function trackManualChoice(requestData) {
+        var identity = orderIdentity(requestData);
+        if (!identity) return false;
+        var order = requestData.orderViews[0];
+        var now = Date.now();
+
+        if (pendingReshopAt && now - pendingReshopAt <= MANUAL_BIND_WINDOW_MS) {
+            delete manualOrders[identity];
+            if (pendingManual && pendingManual.at <= pendingReshopAt) pendingManual = null;
+            pendingReshopAt = 0;
+        }
+        if (pendingManual && now - pendingManual.at <= MANUAL_BIND_WINDOW_MS &&
+            parseInt(order[pendingManual.field], 10) === parseInt(pendingManual.value, 10)) {
+            manualOrders[identity] = true;
+            pendingManual = null;
+        }
+        return !!manualOrders[identity];
+    }
+
     function clickGetQuote() {
         var $c = ui.getContainer();
         var dims = ui.getDimensions($c);
@@ -46,14 +102,22 @@
             return;
         }
 
-        if ($c) { engine.logger('Clicking Get Quote...'); $c.find('.get-quote').click(); }
+        var $getQuote = $c.find('.get-quote');
+        if (!$getQuote.length) {
+            engine.logger('Get Quote button not found — skipping.');
+            ui.clearCheapest(false);
+            return;
+        }
+        engine.logger('Clicking Get Quote...');
+        $getQuote.click();
         ui.clearCheapest(true);
     }
 
     $(document).on('click', '#orderlist-body tr', function () {
         if ($('#orderlist-body tr[data-ss-selected="1"]').length <= 1) {
-            if (settings.autorun) setTimeout(clickGetQuote, 1000);
-            ui.clearCheapest(settings.autorun);
+            var autoQuote = settings.autorun && isActive();
+            if (autoQuote) setTimeout(clickGetQuote, 1000);
+            ui.clearCheapest(autoQuote);
         }
     });
 
@@ -79,15 +143,27 @@
         });
 
         if (options.url.endsWith('/api/orders/updaterates')) {
-            ui.showProcessing();
             var data = JSON.parse(options.data);
+            var manual = trackManualChoice(data);
+            // No "working" lock for refreshes the tool will not act on: a packer's
+            // own choice, or ShipStation echoing the tool's own service change.
+            if (!manual && !engine.isSelectionSyncInProgress(data)) ui.showProcessing();
             if (data.lowPriority) { data.lowPriority = false; options.data = JSON.stringify(data); }
         }
     });
 
+    // A failed ShipStation rate request must not leave Create Label locked.
+    $(document).ajaxError(function (event, xhr, options, thrownError) {
+        if (!options || !options.url || !options.url.endsWith('/api/orders/updaterates')) return;
+        if (thrownError === 'abort' || (xhr && xhr.statusText === 'abort')) return;
+        engine.logger('ShipStation rate request failed — unlocking.');
+        ui.clearCheapest(false);
+        ui.hideProcessing();
+    });
+
     $(document).ajaxSuccess(function (event, xhr, options, data) {
         if (!isActive()) {
-            if (!settings.autorun) ui.clearCheapest(false);
+            ui.clearCheapest(false);
             return;
         }
 
@@ -109,6 +185,12 @@
                 engine.logger('LP response', requestData, data);
             }
             if (!isActive()) { if (!settings.autorun) ui.clearCheapest(false); return; }
+            if (manualOrders[orderIdentity(requestData)]) {
+                engine.logger('Service chosen by hand — leaving this order alone. Click Get Quote to rate-shop it again.');
+                ui.clearCheapest(false);
+                ui.hideProcessing();
+                return;
+            }
             if (engine.isSelectionSyncInProgress(requestData)) {
                 engine.logger('Ignoring updaterates response triggered by winner synchronization.');
                 return;

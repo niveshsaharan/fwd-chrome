@@ -40,6 +40,8 @@ Then read code in order:
   - `enabledServices`
   - `skipAlreadySelected`
 - `window.fwdPaused` is referenced but not set in this repository.
+- WIP (`ss-wip`) locks the open order's `Create Label` button group. Code that sets WIP (`ui.setWip()`, `ui.showProcessing()`, `ui.clearCheapest(true)`) must clear it on every path; the 20-second timeout in `src/ui.js` is only a safety net, and long-running work should call `ui.keepWipAlive()`.
+- `src/main.js` treats a Service/Package change or `Get Quote` click as the packer's own only when `event.isTrusted`; scripted changes (jQuery `.trigger()`, `.click()`, `dispatchEvent`) are never counted.
 
 ## Mandatory Documentation Updates
 

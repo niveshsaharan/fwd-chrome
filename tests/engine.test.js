@@ -58,6 +58,9 @@ function createHarness(options) {
             height: 0,
         };
     }
+    if (options.overrideSellerProviderId) {
+        amazon.sellerProviderId = options.overrideSellerProviderId;
+    }
     const ups = {
         toggleId: 'ups',
         service: 'UPS® Ground (UPS by ShipStation)',
@@ -86,6 +89,7 @@ function createHarness(options) {
         },
     };
     const banners = [];
+    const uiCalls = [];
     let checkmarks = 0;
 
     function responseFor(request) {
@@ -146,11 +150,17 @@ function createHarness(options) {
                 Height: amazon.height,
             };
         },
-        currentlyViewingSameOrder: function (orderNumber) { return orderNumber === '1001'; },
-        setWip: function () {},
-        removeWip: function () {},
-        clearCheapest: function () {},
-        hideProcessing: function () {},
+        currentlyViewingSameOrder: function (orderNumber) {
+            return orderNumber === (options.viewingOrderNumber || '1001');
+        },
+        setWip: function () { uiCalls.push('setWip'); },
+        removeWip: function () {
+            uiCalls.push('removeWip');
+            events.push({ field: 'ui', event: 'removeWip' });
+        },
+        keepWipAlive: function () { uiCalls.push('keepWipAlive'); },
+        clearCheapest: function (showWip) { uiCalls.push('clearCheapest(' + showWip + ')'); },
+        hideProcessing: function () { uiCalls.push('hideProcessing'); },
         showCheckmark: function () { checkmarks++; },
         showCheapestBanner: function (_container, service) { banners.push(service); },
     };
@@ -165,6 +175,7 @@ function createHarness(options) {
         fetch: async function (_url, fetchOptions) {
             const request = JSON.parse(fetchOptions.body);
             requestBodies.push(request);
+            if (options.fetchFails) throw new Error('network down');
             return { json: async function () { return responseFor(request); } };
         },
         setTimeout: function (callback) { callback(); return 1; },
@@ -209,6 +220,7 @@ function createHarness(options) {
         events: events,
         banners: banners,
         errors: errors,
+        uiCalls: uiCalls,
         getCheckmarks: function () { return checkmarks; },
     };
 }
@@ -322,4 +334,49 @@ test('finalizes a when-cheapest package and dimension transformation', async fun
     assert.equal(harness.banners.length, 1);
     assert.equal(harness.banners[0].packageId, 1);
     assert.equal(harness.getCheckmarks(), 1);
+});
+
+test('renews the working lock before every rate request', async function () {
+    const harness = createHarness();
+
+    await harness.engine.rateShop(harness.requestData, harness.initialResponse, {}, {});
+
+    assert.equal(harness.requestBodies.length, 2);
+    assert.equal(harness.uiCalls.filter(function (call) { return call === 'keepWipAlive'; }).length, 2);
+});
+
+test('a failed rate request unlocks the order instead of leaving it working', async function () {
+    const harness = createHarness({ fetchFails: true });
+
+    await harness.engine.rateShop(harness.requestData, harness.initialResponse, {}, {});
+
+    assert.ok(harness.uiCalls.includes('clearCheapest(false)'), 'the working lock must be cleared');
+    assert.ok(harness.uiCalls.includes('hideProcessing'));
+    assert.equal(harness.banners.length, 0);
+    assert.equal(harness.errors.length, 1);
+    assert.equal(harness.errors[0][0], 'Rate shop failed.');
+});
+
+test('a run for an order the packer has left does not unlock the order now open', async function () {
+    const harness = createHarness({ viewingOrderNumber: '2002' });
+
+    await harness.engine.rateShop(harness.requestData, harness.initialResponse, {}, {});
+
+    assert.ok(!harness.uiCalls.includes('clearCheapest(false)'));
+    assert.ok(!harness.uiCalls.includes('hideProcessing'));
+    assert.equal(harness.errors[0][0], 'Rate shop failed — no valid cheapest.');
+});
+
+test('a store override with a bill-to account stays locked until the bill-to switch is done', async function () {
+    const harness = createHarness({ storeOverride: true, overrideSellerProviderId: 1650146 });
+
+    await harness.engine.rateShop(harness.requestData, null, {}, { skipAlreadySelected: false });
+
+    const billToChange = harness.events.findIndex(function (event) {
+        return event.field === 'other' && event.event === 'change';
+    });
+    const unlock = harness.events.findIndex(function (event) { return event.event === 'removeWip'; });
+    assert.ok(billToChange >= 0, 'the bill-to account must be switched');
+    assert.ok(unlock > billToChange, 'Create Label must stay locked until the bill-to switch');
+    assert.equal(harness.uiCalls.filter(function (call) { return call === 'removeWip'; }).length, 1);
 });

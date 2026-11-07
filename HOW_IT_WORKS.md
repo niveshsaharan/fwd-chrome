@@ -64,17 +64,24 @@ Modules publish into `window.FWD`:
 `src/main.js` binds:
 
 - Row-click handler on `#orderlist-body tr`
-  - triggers auto-quote flow when `autorun` is enabled.
+  - triggers auto-quote flow when `autorun` is enabled and the extension is active (`enabled`, `window.fwdPaused` not set).
 - `ajaxSend`
-  - shows processing UI and forces `lowPriority=false` for `/api/orders/updaterates`.
+  - for `/api/orders/updaterates`: forces `lowPriority=false`, ties a pending manual change to the request's order, and shows processing/WIP unless that order is under manual control or the request is ShipStation echoing the tool's own service change (`engine.isSelectionSyncInProgress()`).
 - `ajaxSuccess`
   - handles:
     - `/api/shipments/costsummary`
     - `/api/orders/updaterates`
     - `/api/orders/BulkUpdate`
     - `/api/shipments/List?orderID=...`
+  - clears WIP on every response while the extension is inactive.
+- `ajaxError`
+  - a failed `/api/orders/updaterates` request clears WIP and processing; aborted requests are ignored.
+- Native `document` capture listeners
+  - `change` on `[name="ServiceID"]` / `[name="RequestedPackageTypeID"]` and `click` on `.get-quote`, counted only when `event.isTrusted`.
 
-While the extension is enabled, every `/api/orders/updaterates` response re-runs `engine.rateShop()`, except responses for the same order within 10 seconds after the tool forces its winner into the service control (`engine.isSelectionSyncInProgress()`). That includes responses caused by a packer changing the service by hand, so a manual service choice is re-shopped and replaced by the tool's winner.
+While the extension is enabled, every `/api/orders/updaterates` response re-runs `engine.rateShop()`, except responses for an order under manual control, and responses for the same order within 10 seconds after the tool forces its winner into the service control (`engine.isSelectionSyncInProgress()`).
+
+Manual control (`manualOrders` in `src/main.js`): a trusted `change` on the Service or Package dropdown is held for up to 10 seconds and tied to the order of the next `/api/orders/updaterates` request whose `ServiceID` / `RequestedPackageTypeID` equals the picked value. From then on, that order's responses skip `rateShop()` and clear the tool's banner and checkmark. A trusted click on `.get-quote` releases the order at its next request. The tool's own jQuery `.val().trigger('change')` and `.click()` never dispatch trusted native events, so they are never counted. Orders are keyed like selection sync (`id:<OrderID>`, else `number:<OrderNumber>`) and the state lasts for the page session.
 
 ## Engine Flow (`engine.rateShop`)
 
@@ -88,8 +95,10 @@ While the extension is enabled, every `/api/orders/updaterates` response re-runs
 8. Filter candidates by `enabledServices`, per-service conditions, and `COMMON_CONDITIONS`.
 9. Seed service prices from the triggering `/api/orders/updaterates` response once (when present), then fetch any remaining services (with cache lookup first) using ShipStation `/api/orders/updaterates`.
 10. Parse prices/delivery timing and select winner.
-11. Render cheapest banner and apply service/package in UI.
+11. Render cheapest banner and apply service/package in UI. When the applied service has a `sellerProviderId`, WIP stays on until the bill-to switch is done.
 12. If no valid cheapest candidate survives final validation, clear WIP/processing UI before logging the failure.
+
+`ui.keepWipAlive()` is called before every candidate and final rate request. `rateShop()` wraps the run: any thrown error (a rejected `fetch`, a non-JSON or order-less response) clears WIP and processing and logs `Rate shop failed.`. That cleanup, and the failure branches in steps 11–12, are skipped when the packer has since opened a different order (`stillViewing()`), so an abandoned run cannot unlock the order now open.
 
 ## Store Override Short-Circuit
 
@@ -144,12 +153,14 @@ Selection paths:
 - `showCheapestBanner`
 - `showCheckmark`
 
-WIP state (`ss-fwd-wip` on `<html>`, `ss-wip` on the order container) shows `working...` while rates are being processed and blocks clicks on `#order-grid` (`pointer-events:none`). The ship / `Create Label` button (`.btn-group.ship-btn-group a.btn-success`) only turns grey with `cursor:not-allowed`; it is not click-blocked, so a label can still be created while the tool is working.
+WIP state (`ss-fwd-wip` on `<html>`, `ss-wip` on the order container) shows `working...` while rates are being processed, blocks clicks on `#order-grid` (`pointer-events:none`), and locks the ship button group. A `window` capture-phase `click` listener cancels clicks inside `.ss-wip .btn-group.ship-btn-group` (`Create Label`, its options, and keyboard Enter, which produces a click) before ShipStation's handlers run. The button keeps its grey `cursor:not-allowed` style. Before `2.1.3` the button was only greyed out and could still be clicked.
+
+`setWip()` arms a 20-second safety timeout that `keepWipAlive()` renews; if it fires, WIP and processing are cleared and a console warning is logged. `removeWip()` cancels the timeout and removes `ss-wip` from every element, not only the current container.
 
 ## Current Technical Debt
 
-- Automated coverage is limited to `tests/michaels.test.js` (`getStoreOverride()` store-name and Michaels rule matching), `tests/engine.test.js` (focused engine regressions), and `tests/expedited.test.js` (next-day / 2-day delivery-day counting and winners); condition primitives and `buildMappings()` outputs are not directly tested.
-- The WIP state does not click-block the ship button, and a manual service change re-runs rate-shopping and replaces the packer's choice (see above).
+- Automated coverage is limited to `tests/michaels.test.js` (`getStoreOverride()` store-name and Michaels rule matching), `tests/engine.test.js` (focused engine regressions and lock/unlock paths), `tests/expedited.test.js` (next-day / 2-day delivery-day counting and winners), `tests/ui.test.js` (`Create Label` lock and safety timeout), and `tests/main.test.js` (manual control, autorun, and unlock hooks), all against fakes of ShipStation's page; condition primitives and `buildMappings()` outputs are not directly tested.
+- The `Create Label` lock covers only the open order's `.btn-group.ship-btn-group`. Other ShipStation label paths (for example keyboard shortcuts or batch actions) are not blocked, and the Service/Package dropdowns stay editable during the tool's 3-second apply step.
 - Store-key matching is substring-based, so an unrelated store name that happens to contain `michaels` would receive Michaels overrides billed to seller provider `1650146`.
 - Strong coupling to ShipStation selectors and endpoint behavior.
 - `window.fwdPaused` is referenced but not defined in-repo.

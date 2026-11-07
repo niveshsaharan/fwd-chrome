@@ -323,7 +323,8 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
                 logger('Cheapest set: ' + service.service + ' - ' + service.package + ' @ ' + service.price, service);
                 ui.showCheckmark($c);
                 ui.hideProcessing();
-                ui.removeWip();
+                // With a bill-to account still to switch, stay locked until that is done.
+                if (!service.sellerProviderId) ui.removeWip();
             }, 1000);
 
             if(service.sellerProviderId){
@@ -332,9 +333,15 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
                     {
                         $c.find('select.billToSelect option[data-sellerproviderid="'+service.sellerProviderId+'"]').prop('selected', true).change()
                     }
+                    ui.removeWip();
                 }, 1500);
             }
         }, 2000);
+    }
+
+    // A run's cleanup must not unlock a newer order the packer has since opened.
+    function stillViewing(order) {
+        return !(order && order.OrderNumber) || ui.currentlyViewingSameOrder(order.OrderNumber);
     }
 
     function buildRateRequest(data, service) {
@@ -398,7 +405,21 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
     }
     
 
+    // Any failure (a rejected rate request, an unexpected response) unlocks the
+    // order instead of leaving it "working..." with Create Label locked.
     async function rateShop(requestData, responseData, enabledServices, options) {
+        try {
+            await runRateShop(requestData, responseData, enabledServices, options);
+        } catch (error) {
+            if (stillViewing(requestData && requestData.orderViews && requestData.orderViews[0])) {
+                ui.clearCheapest(false);
+                ui.hideProcessing();
+            }
+            console.error('Rate shop failed.', error);
+        }
+    }
+
+    async function runRateShop(requestData, responseData, enabledServices, options) {
         options = options || {};
 
         const serviceMappingWithPrices = JSON.parse(
@@ -466,6 +487,7 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
         for (var i = 0; i < services.length; i++) {
             var svc = services[i];
             if (typeof svc.order === 'undefined') {
+                ui.keepWipAlive();
                 var res = await fetchRate(requestData, svc);
                 setRateFromResponse(res, services);
             }
@@ -477,10 +499,13 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
             var finalizedCheapest;
 
             try {
+                ui.keepWipAlive();
                 finalizedCheapest = await finalizeWinningService(requestData, cheapest);
             } catch (error) {
-                ui.clearCheapest(false);
-                ui.hideProcessing();
+                if (stillViewing(order)) {
+                    ui.clearCheapest(false);
+                    ui.hideProcessing();
+                }
                 console.error('Winning service finalization failed.', error, cheapest);
                 return;
             }
@@ -489,8 +514,10 @@ FWD.engine = (function ($, config, ui, serviceCatalog) {
             ui.showCheapestBanner(ui.getContainer(), finalizedCheapest);
             applySelection(requestData, finalizedCheapest, { forceServiceChange: true });
         } else {
-            ui.clearCheapest(false);
-            ui.hideProcessing();
+            if (stillViewing(order)) {
+                ui.clearCheapest(false);
+                ui.hideProcessing();
+            }
             console.error('Rate shop failed — no valid cheapest.', services, cheapest);
         }
     }

@@ -14,10 +14,38 @@ FWD.ui = (function ($) {
     var WIP_LABEL = '<label class="control-label col-sm-3">Shipping+</label>' +
         '<div class="col-sm-9" style="padding:7px 9px;"><span>working...</span></div>';
 
+    // While WIP is shown, clicks on the open order's ship button group (Create
+    // Label and its options) are cancelled before ShipStation sees them, so a
+    // label cannot be created from a half-finished selection.
+    var SHIP_LOCK_SELECTOR = '.ss-wip .btn-group.ship-btn-group';
+
+    // Safety net: if nothing renews or clears WIP for this long (a hung rate
+    // request, a flow that never finishes), unlock instead of staying stuck.
+    var WIP_TIMEOUT_MS = 20000;
+    var wipTimer = null;
+
     $('head').append(STYLES);
+
+    window.addEventListener('click', function (event) {
+        var target = event.target;
+        if (!target || typeof target.closest !== 'function' || !target.closest(SHIP_LOCK_SELECTOR)) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        console.log('%cCreate Label is locked until FWD finishes working.', 'color:#ff8000;');
+    }, true);
 
     function getContainer() {
         return $('.modal.order-detail').length ? $('.modal.order-detail') : $('#order-drawer');
+    }
+
+    function armWipTimeout() {
+        clearTimeout(wipTimer);
+        wipTimer = setTimeout(function () {
+            wipTimer = null;
+            console.warn('FWD still working after ' + (WIP_TIMEOUT_MS / 1000) + 's; unlocking Create Label.');
+            hideProcessing();
+            removeWip();
+        }, WIP_TIMEOUT_MS);
     }
 
     function setWip() {
@@ -28,12 +56,21 @@ FWD.ui = (function ($) {
         } else {
             $('#ship-plus-wip').html(WIP_LABEL);
         }
+        armWipTimeout();
     }
 
     function removeWip() {
+        clearTimeout(wipTimer);
+        wipTimer = null;
         $('html').removeClass('ss-fwd-wip');
-        getContainer().removeClass('ss-wip');
+        // Every container, not just the current one, so a lock cannot linger on a drawer or modal that is no longer active.
+        $('.ss-wip').removeClass('ss-wip');
         document.querySelectorAll('#ship-plus-wip').forEach(function (n) { n.remove(); });
+    }
+
+    // Renews the safety-net timeout while a long rate-shop is still making progress.
+    function keepWipAlive() {
+        if (wipTimer) armWipTimeout();
     }
 
     function clearCheapest(showWip) {
@@ -137,6 +174,7 @@ FWD.ui = (function ($) {
         getContainer: getContainer,
         setWip: setWip,
         removeWip: removeWip,
+        keepWipAlive: keepWipAlive,
         clearCheapest: clearCheapest,
         showCheckmark: showCheckmark,
         showProcessing: showProcessing,

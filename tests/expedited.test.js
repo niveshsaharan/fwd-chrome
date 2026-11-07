@@ -75,6 +75,7 @@ async function shop({ today, requested, quotes }) {
         currentlyViewingSameOrder: () => true,
         setWip() {},
         removeWip() {},
+        keepWipAlive() {},
         clearCheapest() {},
         hideProcessing() {},
         showCheckmark() {},

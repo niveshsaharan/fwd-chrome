@@ -36,7 +36,7 @@ This file describes the extension's current behavior as implemented in the `v2` 
   - Closed by default whenever the popup opens.
   - Explains that checked services are eligible and unchecked services are skipped.
   - Explains that already-correct selections can be left alone when `skipAlreadySelected` is enabled.
-  - Calls out Michaels store-name matching (any store name containing `Michaels`), Michaels UPS Ground and SurePost override behavior, direct store override behavior, Amazon Shipping domestic/non-expedited/Walmart behavior, and USPS Priority Mail narrowing.
+  - Calls out Michaels store-name matching (any store name containing `Michaels`), Michaels UPS Ground and SurePost override behavior, direct store override behavior, the `Create Label` lock, hand-picked Service/Package behavior, Amazon Shipping domestic/non-expedited/Walmart behavior, and USPS Priority Mail narrowing.
 
 ## Where The Extension Runs
 
@@ -58,6 +58,9 @@ This file describes the extension's current behavior as implemented in the `v2` 
 - Skips already-correct selections when `skipAlreadySelected` is enabled.
 - Fetches rates, caches responses, and selects a winner.
 - Applies selected service/package to the active order form.
+- Locks the open order's ship / `Create Label` button group while the order shows `working...`: clicks, including keyboard Enter, are cancelled before ShipStation sees them, so a label cannot be created before the tool has finished choosing. The lock lifts when the tool finishes, as soon as a rate request fails, or after 20 seconds without progress. For store overrides with a bill-to account it lasts until the bill-to switch is done.
+- Leaves a packer's own choice alone: after a packer changes the Service or Package dropdown by hand, rate refreshes for that order (for example after a weight change, or reopening the order with autorun) no longer re-shop it or replace the choice, and the tool's cheapest banner and checkmark are cleared. Clicking `Get Quote` by hand hands the order back to the tool. Only real packer input counts, never the tool's own changes or autorun's `Get Quote` click. This lasts until the ShipStation page is reloaded.
+- `Automatic rate-shopping` has no effect while `Enable rate-shipping` is off.
 - Shows in-page status (`working...`, spinner, cheapest banner, checkmark).
 - Shows inline hover guidance for conditional service toggles and collapsible popup guidance for common service-toggle behavior and key special-case rules.
 - Includes `Amazon Shipping Ground(On and Off Amazon)` in domestic non-expedited candidate sets.

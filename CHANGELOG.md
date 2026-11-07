@@ -9,6 +9,20 @@ Two notes:
 
 ## Current Release Line
 
+### 2.1.3 - 2026-11-07
+
+Commit message headline: `2.1.3: lock Create Label while working and keep hand-picked services`
+
+- `Create Label` is now locked while the order shows `working...`: a capture-phase click listener in `src/ui.js` cancels clicks, including keyboard Enter, on the open order's `.btn-group.ship-btn-group` before ShipStation sees them. Before, the button only turned grey, so a label could be created mid-rate-shop with whatever service ShipStation held, and the tool then changed the dropdown afterwards.
+- The lock cannot get stuck: a failing `rateShop()` (for example a rejected rate request) and a failed ShipStation `/api/orders/updaterates` request unlock immediately, a missing `Get Quote` button unlocks, refreshes the tool will not act on no longer lock, and a 20-second safety timeout, renewed before every rate request, unlocks anything else.
+- Store overrides with a bill-to account stay locked until the bill-to switch is done; the lock used to lift 0.5 seconds before the switch.
+- A run for an order the packer has left no longer unlocks the order now open.
+- A Service or Package picked by hand is kept: later rate refreshes for that order no longer re-shop it or replace it with the tool's winner. Clicking `Get Quote` by hand hands the order back. Only real input counts (`event.isTrusted`), so the tool's own changes and autorun's `Get Quote` click are never mistaken for the packer's.
+- `Automatic rate-shopping` no longer clicks `Get Quote` or shows `working...` while `Enable rate-shipping` is off.
+- Added popup Service Notes for the lock and hand-picked choices.
+- Added `tests/ui.test.js` and `tests/main.test.js`, plus lock/unlock cases in `tests/engine.test.js`.
+- Bumped manifest version to `2.1.3`.
+
 ### 2.1.2 - 2026-11-07
 
 Commit message headline: `2.1.2: fix next-day/2-day delivery-day counting for weekend deliveries`
