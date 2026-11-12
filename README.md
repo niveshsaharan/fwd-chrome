@@ -2,7 +2,7 @@
 
 This repository contains a Chrome extension that runs inside ShipStation and rate-shops shipments using hard-coded business rules. It evaluates eligible carrier/service/package combinations, fetches rates, selects the winning option, and applies that selection to the open order UI.
 
-The current source/runtime version in this branch is `2.1.3`. There is no build step. The checked-in JavaScript files are runtime files loaded directly by Chrome, and focused regression tests run with Node's built-in test runner.
+The current source/runtime version in this branch is `2.1.4`. There is no build step. The checked-in JavaScript files are runtime files loaded directly by Chrome, and focused regression tests run with Node's built-in test runner.
 
 ## Read First
 
@@ -34,6 +34,7 @@ Read the docs in this order:
 - Shows collapsible popup service notes explaining enabled/disabled service behavior, Michaels overrides, Amazon Shipping eligibility, and USPS Priority Mail narrowing.
 - Hooks ShipStation AJAX lifecycle events to trigger rating and selection flows.
 - Builds candidate services from dimensions + requested-service text + country + residential/commercial + store-specific overrides.
+- Excludes `UPS® Ground (UPS by ShipStation)` from `20x12x6` rate-shopping only; `UPS® Ground (UPS)` on the UPS account remains eligible, and all other size mappings are unchanged.
 - Skips already-correct deterministic direct selections when `skipAlreadySelected` is enabled and the current service, package, provider, carrier, dimensions, and required bill-to account can all be proved from the form.
 - Always finalizes normal cheapest-rate winners with an uncached `/api/orders/updaterates` request and re-synchronizes the ShipStation service control, even when it already displays the winning service.
 - For `next day delivery` / `2-day delivery` requests, chooses among FedEx Ground, Home Delivery, 2Day, and Standard Overnight by counting the days until each `DeliveryTime` estimate, skipping weekend days in transit; a Saturday or Sunday delivery still counts as a day, so Saturday Home Delivery from Thursday is not next day.
@@ -68,6 +69,7 @@ Read the docs in this order:
 | `popup.html` | Popup markup |
 | `popup.js` | Popup settings persistence and toggle wiring |
 | `tests/engine.test.js` | Node regression coverage for final-winner synchronization and mismatched final responses |
+| `tests/config.test.js` | Regression coverage for the 20x12x6 UPS by ShipStation exclusion, retained UPS-account service, and adjacent-size rate-shopping |
 | `tests/michaels.test.js` | Node regression coverage for `getStoreOverride()` store-name contains matching and the Michaels SurePost / UPS Ground / UPS Ground Saver rules |
 | `tests/expedited.test.js` | Node regression coverage for next-day / 2-day delivery-day counting and winners, running the real config and engine with a pinned date and `America/New_York` time zone |
 | `tests/ui.test.js` | Node coverage for the `Create Label` lock and its 20-second safety timeout in `src/ui.js` |

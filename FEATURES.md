@@ -130,6 +130,8 @@ Additional global rule controls:
 
 ## Supported Mapping Families
 
+For `20x12x6` only, normal rate-shopping excludes `UPS® Ground (UPS by ShipStation)` (service ID `10301`, provider ID `103`). `UPS® Ground (UPS)` on the UPS account (service ID `26`, provider ID `3`) remains eligible under its existing conditions. The ShipStation service toggle remains available for other sizes; other size mappings and Michaels direct overrides are unchanged.
+
 Mappings built by `config.buildMappings()` include:
 
 - Fixed keys:

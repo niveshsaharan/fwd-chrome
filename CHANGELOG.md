@@ -9,6 +9,15 @@ Two notes:
 
 ## Current Release Line
 
+### 2.1.4 - 2026-11-11
+Commit message headline: `2.1.4: exclude UPS by ShipStation Ground for 20x12x6 only`
+
+- Removed `UPS® Ground (UPS by ShipStation)` (service ID `10301`, provider ID `103`) from the `20x12x6` candidate mapping to avoid re-rating adjustment charges on that package size.
+- Kept `UPS® Ground (UPS)` on the UPS account (service ID `26`, provider ID `3`) and all other `20x12x6` candidates unchanged.
+- Left all other size mappings, service toggles, and Michaels direct overrides unchanged.
+- Added mapping and rate-shopping regression coverage in `tests/config.test.js`.
+- Bumped manifest version to `2.1.4`.
+
 ### 2.1.3 - 2026-11-07
 
 Commit message headline: `2.1.3: lock Create Label while working and keep hand-picked services`

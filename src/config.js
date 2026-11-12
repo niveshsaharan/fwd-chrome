@@ -305,6 +305,13 @@ window.FWD.config = (function (serviceCatalog) {
             var key = d.join('x');
             var services = standardSet(d[0], d[1], d[2]);
 
+            // Avoid adjustment charges on this size; keep the separate UPS account option.
+            if (key === '20x12x6') {
+                services = services.filter(function (sv) {
+                    return sv.toggleId !== 'ups_ground_shipstation_package';
+                });
+            }
+
             if (['20x12x3','20x12x4','20x12x6'].includes(key)) {
                 services.forEach(function (sv) {
                     if (sv.serviceId === 8346) {
